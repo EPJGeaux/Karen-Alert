@@ -8,7 +8,17 @@
     body { margin:0; font-family:sans-serif; }
     #map { height: 50vh; } /* smaller map */
     #dashboard { padding:10px; text-align:center; background:#fff; }
-    #threat { font-size: 1.5em; font-weight:bold; color:red; }
+    #threat {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: red;
+      display: inline-block;
+      transition: transform 0.3s ease, color 0.3s ease;
+    }
+    .pulse {
+      transform: scale(1.5);
+      color: darkred;
+    }
   </style>
 </head>
 <body>
@@ -19,13 +29,12 @@
   <div id="map"></div>
 
   <script>
-    const map = L.map('map').setView([29.8078, -95.4250], 16); // approximate address
+    const map = L.map('map').setView([29.8078, -95.4250], 16);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
     const apiURL = "https://data.houstontx.gov/resource/7x3i-zuj1.json?$limit=1000";
-
     let seen = new Set(JSON.parse(localStorage.getItem('seenComplaints') || '[]'));
     let threatLevel = seen.size;
     const threatSpan = document.getElementById('threat');
@@ -38,6 +47,11 @@
       "Drama levels rising!",
       "Someone woke up with a parking complaint today."
     ];
+
+    function animateThreat() {
+      threatSpan.classList.add('pulse');
+      setTimeout(() => threatSpan.classList.remove('pulse'), 500);
+    }
 
     function updateRadar() {
       fetch(apiURL)
@@ -58,6 +72,7 @@
 
               threatLevel++;
               threatSpan.textContent = threatLevel;
+              animateThreat(); // trigger pulse
 
               const lat = parseFloat(f.latitude) || 29.8078;
               const lon = parseFloat(f.longitude) || -95.4250;
@@ -75,9 +90,9 @@
         .catch(err => console.error("API Error:", err));
     }
 
-    // Poll every 30 seconds
     setInterval(updateRadar, 30000);
     updateRadar();
   </script>
 </body>
 </html>
+
