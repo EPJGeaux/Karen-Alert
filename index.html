@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Karen Radar 🚨</title>
+  <title>Karen Heatmap Radar 🚨</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
   <style>
     body { margin:0; font-family:sans-serif; }
     #map { height: 80vh; }
     #dashboard { padding:10px; text-align:center; background:#fff; }
     #threat { font-size: 1.5em; font-weight:bold; color:red; }
-    .leaflet-popup-content { font-family:sans-serif; }
   </style>
 </head>
 <body>
@@ -20,25 +20,18 @@
   <div id="map"></div>
 
   <script>
-    // Map setup
-    const map = L.map('map').setView([29.8078, -95.4250], 16); // approximate coords
+    const map = L.map('map').setView([29.8078, -95.4250], 16); // approximate address
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Icon for complaints
-    const karenIcon = L.icon({
-      iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Red_circle.svg/120px-Red_circle.svg.png',
-      iconSize: [20, 20]
-    });
+    const apiURL = "https://data.houstontx.gov/resource/7x3i-zuj1.json?$limit=1000";
 
-    // Track seen complaints
-    const seen = new Set(JSON.parse(localStorage.getItem('seenComplaints') || '[]'));
+    let seen = new Set(JSON.parse(localStorage.getItem('seenComplaints') || '[]'));
     let threatLevel = seen.size;
     const threatSpan = document.getElementById('threat');
     threatSpan.textContent = threatLevel;
 
-    // Sarcasm messages
     const sarcasticComments = [
       "Someone’s really committed to their civic duty…",
       "Oh look, a new neighbor report!",
@@ -47,10 +40,11 @@
       "Someone woke up with a complaint today."
     ];
 
-    // Houston public 311 JSON
-    const apiURL = "https://data.houstontx.gov/resource/7x3i-zuj1.json?$limit=1000";
+    // Heatmap layer
+    const heatPoints = [];
+    const heat = L.heatLayer(heatPoints, {radius: 25, blur: 15, maxZoom: 18}).addTo(map);
 
-    function checkForKarens() {
+    function updateHeatmap() {
       fetch(apiURL)
         .then(res => res.json())
         .then(data => {
@@ -59,7 +53,7 @@
           );
 
           cheshireComplaints.forEach(f => {
-            const id = f.service_request_id || f.sr_number || f.created_date; // fallback if no unique ID
+            const id = f.service_request_id || f.sr_number || f.created_date;
             if (!seen.has(id)) {
               seen.add(id);
               localStorage.setItem('seenComplaints', JSON.stringify([...seen]));
@@ -70,15 +64,15 @@
               const lat = parseFloat(f.latitude) || 29.8078;
               const lon = parseFloat(f.longitude) || -95.4250;
 
-              const marker = L.marker([lat, lon], {icon: karenIcon}).addTo(map);
-              const comment = sarcasticComments[Math.floor(Math.random() * sarcasticComments.length)];
+              // Add point to heatmap
+              heatPoints.push([lat, lon, 1]); // 1 = intensity
+              heat.setLatLngs(heatPoints);
 
-              marker.bindPopup(`
-                <b>🚨 ${f.sr_type || "Unknown Complaint"} 🚨</b><br>
-                Status: ${f.status || "Unknown"}<br>
-                Reported: ${f.created_date || ""}<br>
-                <i>${comment}</i>
-              `).openPopup();
+              // Popup marker with sarcasm
+              const comment = sarcasticComments[Math.floor(Math.random() * sarcasticComments.length)];
+              L.circleMarker([lat, lon], {radius:6, color:'red', fillOpacity:0.7})
+                .addTo(map)
+                .bindPopup(`<b>🚨 ${f.sr_type || "Unknown Complaint"} 🚨</b><br>Status: ${f.status || "Unknown"}<br>Reported: ${f.created_date || ""}<br><i>${comment}</i>`);
 
               alert("🚨 KAREN ALERT! New complaint detected! 🚨");
             }
@@ -87,9 +81,8 @@
         .catch(err => console.error("API Error:", err));
     }
 
-    // Poll every 30 seconds
-    setInterval(checkForKarens, 30000);
-    checkForKarens();
+    setInterval(updateHeatmap, 30000);
+    updateHeatmap();
   </script>
 </body>
 </html>
