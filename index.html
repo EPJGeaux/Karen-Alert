@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Karen Radar 🚨</title>
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <style>
+    body { margin:0; font-family:sans-serif; }
+    #map { height: 80vh; }
+    #dashboard { padding:10px; text-align:center; background:#fff; }
+    #threat { font-size: 1.5em; font-weight:bold; color:red; }
+    .leaflet-popup-content { font-family:sans-serif; }
+  </style>
+</head>
+<body>
+  <div id="dashboard">
+    Monitoring <b>1062 Cheshire Ln, Houston, TX 77018</b> for 311 complaints…<br>
+    Karen Threat Level: <span id="threat">0</span> ⚠️
+  </div>
+  <div id="map"></div>
+
+  <script>
+    // Initialize map
+    const map = L.map('map').setView([29.7604, -95.3698], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // API URL
+    const apiURL = "https://data.houstontx.gov/resource/7x3i-zuj1.json?address=1062 Cheshire Ln";
+
+    // Load seen complaints from localStorage or init empty
+    const seen = new Set(JSON.parse(localStorage.getItem('seenComplaints') || '[]'));
+    let threatLevel = seen.size;
+    const threatSpan = document.getElementById('threat');
+    threatSpan.textContent = threatLevel;
+
+    // Marker icon
+    const karenIcon = L.icon({
+      iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Red_circle.svg/120px-Red_circle.svg.png',
+      iconSize: [20, 20]
+    });
+
+    // Sarcasm messages
+    const sarcasticComments = [
+      "Someone’s really committed to their civic duty…",
+      "Oh look, a new neighbor report!",
+      "Brace yourself, the HOA might call…",
+      "Drama levels rising!",
+      "Someone woke up with a complaint today."
+    ];
+
+    function checkForKarens() {
+      fetch(apiURL)
+        .then(res => res.json())
+        .then(data => {
+          data.forEach(f => {
+            const id = f.service_request_id;
+
+            if (!seen.has(id)) {
+              seen.add(id);
+              localStorage.setItem('seenComplaints', JSON.stringify([...seen]));
+
+              threatLevel++;
+              threatSpan.textContent = threatLevel;
+
+              // Add marker if coordinates exist
+              if (f.latitude && f.longitude) {
+                const marker = L.marker([f.latitude, f.longitude], {icon: karenIcon}).addTo(map);
+                const comment = sarcasticComments[Math.floor(Math.random()*sarcasticComments.length)];
+                marker.bindPopup(`
+                  <b>🚨 ${f.sr_type || "Unknown Complaint"} 🚨</b><br>
+                  Status: ${f.status || "Unknown"}<br>
+                  Reported: ${f.created_date || ""}<br>
+                  <i>${comment}</i>
+                `).openPopup();
+              }
+
+              // Optional alert popup
+              alert("🚨 KAREN ALERT! New complaint detected! 🚨");
+            }
+          });
+        })
+        .catch(err => console.error("API Error:", err));
+    }
+
+    // Poll every 30 seconds
+    setInterval(checkForKarens, 30000);
+    checkForKarens();
+  </script>
+</body>
+</html>
