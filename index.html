@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Karen Heatmap Radar 🚨</title>
+  <title>Karen Parking Radar 🚨</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
   <style>
     body { margin:0; font-family:sans-serif; }
-    #map { height: 80vh; }
+    #map { height: 50vh; } /* smaller map */
     #dashboard { padding:10px; text-align:center; background:#fff; }
     #threat { font-size: 1.5em; font-weight:bold; color:red; }
   </style>
 </head>
 <body>
   <div id="dashboard">
-    Monitoring <b>1062 Cheshire Ln, Houston, TX 77018</b> for 311 complaints…<br>
+    Monitoring <b>1062 Cheshire Ln, Houston, TX 77018</b> for parking complaints…<br>
     Karen Threat Level: <span id="threat">0</span> ⚠️
   </div>
   <div id="map"></div>
@@ -37,7 +37,7 @@
       "Oh look, a new neighbor report!",
       "Brace yourself, the HOA might call…",
       "Drama levels rising!",
-      "Someone woke up with a complaint today."
+      "Someone woke up with a parking complaint today."
     ];
 
     // Heatmap layer
@@ -48,11 +48,15 @@
       fetch(apiURL)
         .then(res => res.json())
         .then(data => {
-          const cheshireComplaints = data.filter(f =>
-            f.address && f.address.toLowerCase().includes("1062 cheshire ln")
+          // Filter: your address + parking complaints only
+          const cheshireParkingComplaints = data.filter(f =>
+            f.address &&
+            f.address.toLowerCase().includes("1062 cheshire ln") &&
+            f.sr_type &&
+            f.sr_type.toLowerCase().includes("parking")
           );
 
-          cheshireComplaints.forEach(f => {
+          cheshireParkingComplaints.forEach(f => {
             const id = f.service_request_id || f.sr_number || f.created_date;
             if (!seen.has(id)) {
               seen.add(id);
@@ -64,25 +68,26 @@
               const lat = parseFloat(f.latitude) || 29.8078;
               const lon = parseFloat(f.longitude) || -95.4250;
 
-              // Add point to heatmap
-              heatPoints.push([lat, lon, 1]); // 1 = intensity
+              // Add to heatmap
+              heatPoints.push([lat, lon, 1]);
               heat.setLatLngs(heatPoints);
 
-              // Popup marker with sarcasm
               const comment = sarcasticComments[Math.floor(Math.random() * sarcasticComments.length)];
               L.circleMarker([lat, lon], {radius:6, color:'red', fillOpacity:0.7})
                 .addTo(map)
-                .bindPopup(`<b>🚨 ${f.sr_type || "Unknown Complaint"} 🚨</b><br>Status: ${f.status || "Unknown"}<br>Reported: ${f.created_date || ""}<br><i>${comment}</i>`);
+                .bindPopup(`<b>🚨 ${f.sr_type} 🚨</b><br>Status: ${f.status || "Unknown"}<br>Reported: ${f.created_date || ""}<br><i>${comment}</i>`);
 
-              alert("🚨 KAREN ALERT! New complaint detected! 🚨");
+              alert("🚨 KAREN ALERT! New parking complaint detected! 🚨");
             }
           });
         })
         .catch(err => console.error("API Error:", err));
     }
 
+    // Poll every 30 seconds
     setInterval(updateHeatmap, 30000);
     updateHeatmap();
   </script>
 </body>
 </html>
+
