@@ -35,6 +35,7 @@
     }).addTo(map);
 
     const apiURL = "https://data.houstontx.gov/resource/7x3i-zuj1.json?$limit=1000";
+
     let seen = new Set(JSON.parse(localStorage.getItem('seenComplaints') || '[]'));
     let threatLevel = seen.size;
     const threatSpan = document.getElementById('threat');
@@ -72,7 +73,7 @@
 
               threatLevel++;
               threatSpan.textContent = threatLevel;
-              animateThreat(); // trigger pulse
+              animateThreat();
 
               const lat = parseFloat(f.latitude) || 29.8078;
               const lon = parseFloat(f.longitude) || -95.4250;
