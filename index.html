@@ -49,6 +49,9 @@
       "Someone woke up with a parking complaint today."
     ];
 
+    // Toggle test mode: true = show all recent parking complaints, false = Cheshire Ln only
+    const TEST_MODE = true;
+
     function animateThreat() {
       threatSpan.classList.add('pulse');
       setTimeout(() => threatSpan.classList.remove('pulse'), 500);
@@ -58,14 +61,24 @@
       fetch(apiURL)
         .then(res => res.json())
         .then(data => {
-          const cheshireParking = data.filter(f =>
-            f.address &&
-            f.address.toLowerCase().includes("1062 cheshire ln") &&
-            f.sr_type &&
-            f.sr_type.toLowerCase().includes("parking")
-          );
+          let complaints;
+          if (TEST_MODE) {
+            // Show all recent parking complaints for testing
+            complaints = data.filter(f =>
+              f.sr_type &&
+              f.sr_type.toLowerCase().includes("parking")
+            );
+          } else {
+            // Strict filter: Cheshire Ln only
+            complaints = data.filter(f =>
+              f.address &&
+              f.address.toLowerCase().includes("1062 cheshire ln") &&
+              f.sr_type &&
+              f.sr_type.toLowerCase().includes("parking")
+            );
+          }
 
-          cheshireParking.forEach(f => {
+          complaints.forEach(f => {
             const id = f.service_request_id || f.sr_number || f.created_date;
             if (!seen.has(id)) {
               seen.add(id);
@@ -84,6 +97,7 @@
                 .addTo(map)
                 .bindPopup(`<b>🚨 ${f.sr_type} 🚨</b><br>Status: ${f.status || "Unknown"}<br>Reported: ${f.created_date || ""}<br><i>${comment}</i>`);
 
+              console.log("New parking complaint detected:", f.address, f.sr_type, f.created_date);
               alert("🚨 KAREN ALERT! New parking complaint detected! 🚨");
             }
           });
@@ -96,4 +110,5 @@
   </script>
 </body>
 </html>
+
 
