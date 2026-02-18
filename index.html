@@ -6,7 +6,7 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <style>
     body { margin:0; font-family:sans-serif; }
-    #map { height: 50vh; } /* smaller map */
+    #map { height: 50vh; }
     #dashboard { padding:10px; text-align:center; background:#fff; }
     #threat {
       font-size: 1.5em;
@@ -23,13 +23,13 @@
 </head>
 <body>
   <div id="dashboard">
-    Monitoring <b>1062 Cheshire Ln, Houston, TX 77018</b> for parking complaints…<br>
+    Monitoring <b>ZIP 77018</b> for parking complaints…<br>
     Karen Threat Level: <span id="threat">0</span> ⚠️
   </div>
   <div id="map"></div>
 
   <script>
-    const map = L.map('map').setView([29.8078, -95.4250], 16);
+    const map = L.map('map').setView([29.8078, -95.4250], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
@@ -49,9 +49,6 @@
       "Someone woke up with a parking complaint today."
     ];
 
-    // Toggle test mode: true = show all recent parking complaints, false = Cheshire Ln only
-    const TEST_MODE = true;
-
     function animateThreat() {
       threatSpan.classList.add('pulse');
       setTimeout(() => threatSpan.classList.remove('pulse'), 500);
@@ -61,24 +58,13 @@
       fetch(apiURL)
         .then(res => res.json())
         .then(data => {
-          let complaints;
-          if (TEST_MODE) {
-            // Show all recent parking complaints for testing
-            complaints = data.filter(f =>
-              f.sr_type &&
-              f.sr_type.toLowerCase().includes("parking")
-            );
-          } else {
-            // Strict filter: Cheshire Ln only
-            complaints = data.filter(f =>
-              f.address &&
-              f.address.toLowerCase().includes("1062 cheshire ln") &&
-              f.sr_type &&
-              f.sr_type.toLowerCase().includes("parking")
-            );
-          }
+          // Filter for ZIP 77018 and parking only
+          const zipParking = data.filter(f =>
+            f.zip && f.zip === "77018" &&
+            f.sr_type && f.sr_type.toLowerCase().includes("parking")
+          );
 
-          complaints.forEach(f => {
+          zipParking.forEach(f => {
             const id = f.service_request_id || f.sr_number || f.created_date;
             if (!seen.has(id)) {
               seen.add(id);
@@ -97,7 +83,7 @@
                 .addTo(map)
                 .bindPopup(`<b>🚨 ${f.sr_type} 🚨</b><br>Status: ${f.status || "Unknown"}<br>Reported: ${f.created_date || ""}<br><i>${comment}</i>`);
 
-              console.log("New parking complaint detected:", f.address, f.sr_type, f.created_date);
+              console.log("New parking complaint in 77018:", f.address, f.sr_type, f.created_date);
               alert("🚨 KAREN ALERT! New parking complaint detected! 🚨");
             }
           });
@@ -110,5 +96,6 @@
   </script>
 </body>
 </html>
+
 
 
