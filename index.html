@@ -4,7 +4,6 @@
   <title>Karen Parking Radar 🚨</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
   <style>
     body { margin:0; font-family:sans-serif; }
     #map { height: 50vh; } /* smaller map */
@@ -40,23 +39,18 @@
       "Someone woke up with a parking complaint today."
     ];
 
-    // Heatmap layer
-    const heatPoints = [];
-    const heat = L.heatLayer(heatPoints, {radius: 25, blur: 15, maxZoom: 18}).addTo(map);
-
-    function updateHeatmap() {
+    function updateRadar() {
       fetch(apiURL)
         .then(res => res.json())
         .then(data => {
-          // Filter: your address + parking complaints only
-          const cheshireParkingComplaints = data.filter(f =>
+          const cheshireParking = data.filter(f =>
             f.address &&
             f.address.toLowerCase().includes("1062 cheshire ln") &&
             f.sr_type &&
             f.sr_type.toLowerCase().includes("parking")
           );
 
-          cheshireParkingComplaints.forEach(f => {
+          cheshireParking.forEach(f => {
             const id = f.service_request_id || f.sr_number || f.created_date;
             if (!seen.has(id)) {
               seen.add(id);
@@ -68,12 +62,9 @@
               const lat = parseFloat(f.latitude) || 29.8078;
               const lon = parseFloat(f.longitude) || -95.4250;
 
-              // Add to heatmap
-              heatPoints.push([lat, lon, 1]);
-              heat.setLatLngs(heatPoints);
-
               const comment = sarcasticComments[Math.floor(Math.random() * sarcasticComments.length)];
-              L.circleMarker([lat, lon], {radius:6, color:'red', fillOpacity:0.7})
+
+              L.circleMarker([lat, lon], {radius:8, color:'red', fillOpacity:0.7})
                 .addTo(map)
                 .bindPopup(`<b>🚨 ${f.sr_type} 🚨</b><br>Status: ${f.status || "Unknown"}<br>Reported: ${f.created_date || ""}<br><i>${comment}</i>`);
 
@@ -85,8 +76,8 @@
     }
 
     // Poll every 30 seconds
-    setInterval(updateHeatmap, 30000);
-    updateHeatmap();
+    setInterval(updateRadar, 30000);
+    updateRadar();
   </script>
 </body>
 </html>
