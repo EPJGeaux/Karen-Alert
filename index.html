@@ -10,15 +10,8 @@
   />
 
   <style>
-    body {
-      margin: 0;
-      font-family: sans-serif;
-    }
-
-    #map {
-      height: 100vh;
-      width: 100vw;
-    }
+    body { margin: 0; font-family: sans-serif; }
+    #map { height: 100vh; width: 100vw; }
 
     #controls {
       position: absolute;
@@ -29,13 +22,6 @@
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       z-index: 1000;
-    }
-
-    #controls label {
-      display: block;
-      cursor: pointer;
-      font-size: 14px;
-      user-select: none;
     }
 
     #title {
@@ -63,55 +49,55 @@
 </div>
 
 <div id="title">Houston Karen Command Center</div>
-
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
   const apiURL =
-    "https://mycity.houstontx.gov/arcgis/rest/services/311/Houston311_RecentServiceRequests/FeatureServer/3/query?where=1%3D1&outFields=CaseType,Status,Latitude,Longitude,IncidentAddress&resultRecordCount=500&f=json";
+    "https://mycity2.houstontx.gov/pubgis01/rest/services/311/Houston311_RecentServiceRequests/FeatureServer/3/query?where=1%3D1&outFields=CaseType,Status,Latitude,Longitude,IncidentAddress&resultRecordCount=500&f=json";
 
   const map = L.map("map").setView([29.7604, -95.3698], 11);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "¯\\_(ツ)_/¯"
+    attribution: "Houston Chaos Engine"
   }).addTo(map);
 
-  let allMarkers = [];
-  let cachedFeatures = [];
+  let markers = [];
+  let cached = [];
 
-  function matchesFilter(caseType, activeFilters) {
-    const type = (caseType || "").toLowerCase();
-
-    if (type.includes("parking")) return activeFilters.has("parking");
-    if (type.includes("trash")) return activeFilters.has("trash");
-    if (type.includes("noise")) return activeFilters.has("noise");
-
-    return activeFilters.has("other");
-  }
-
-  function getActiveFilters() {
+  function getFilters() {
     return new Set(
       [...document.querySelectorAll("#controls input:checked")]
         .map(cb => cb.value)
     );
   }
 
-  function clearMarkers() {
-    allMarkers.forEach(m => map.removeLayer(m));
-    allMarkers = [];
+  function matches(caseType, filters) {
+    const type = (caseType || "").toLowerCase();
+
+    if (type.includes("parking")) return filters.has("parking");
+    if (type.includes("trash")) return filters.has("trash");
+    if (type.includes("noise")) return filters.has("noise");
+
+    return filters.has("other");
   }
 
-  function renderMarkers(filters) {
-    clearMarkers();
+  function clearMarkers() {
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
+  }
 
-    cachedFeatures.forEach(attrs => {
+  function render() {
+    clearMarkers();
+    const filters = getFilters();
+
+    cached.forEach(attrs => {
       const lat = attrs.Latitude;
       const lon = attrs.Longitude;
 
       if (!lat || !lon) return;
-      if (!matchesFilter(attrs.CaseType, filters)) return;
+      if (!matches(attrs.CaseType, filters)) return;
 
       const marker = L.circleMarker([lat, lon], { radius: 6 })
         .addTo(map)
@@ -121,30 +107,9 @@
           ${attrs.IncidentAddress || ""}
         `);
 
-      allMarkers.push(marker);
+      markers.push(marker);
     });
-  }
 
-  fetch(apiURL)
-    .then(res => res.json())
-    .then(data => {
-      const features = data.features || [];
+    console.
 
-      console.log("Records:", features.length);
-
-      cachedFeatures = features.map(f => f.attributes || {});
-      renderMarkers(getActiveFilters());
-    })
-    .catch(err => console.error("API Error:", err));
-
-  document
-    .querySelectorAll("#controls input")
-    .forEach(cb =>
-      cb.addEventListener("change", () =>
-        renderMarkers(getActiveFilters())
-      )
-    );
-</script>
-
-</body>
-</html>
+    
