@@ -9,73 +9,52 @@
     html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
     #map { height: 100%; width: 100%; }
 
-    .panel {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      z-index: 1000;
-      background: white;
-      padding: 12px 14px;
-      border-radius: 14px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-      font-size: 14px;
-      line-height: 1.35;
-      width: 300px;
+    .panel{
+      position:absolute; top:15px; right:15px; z-index:1000;
+      background:#fff; padding:12px 14px; border-radius:14px;
+      box-shadow:0 6px 18px rgba(0,0,0,.25);
+      font-size:14px; width:320px; line-height:1.35;
     }
-    .row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
-    .row input[type="text"] { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 10px; }
-    .row button, .row select { padding: 8px 10px; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; background: #fff; }
-    .muted { color: #666; font-size: 12px; margin-top: 6px; }
-    label { display: block; cursor: pointer; margin-top: 6px; }
-    .badge { display:inline-block; padding: 2px 8px; border-radius: 999px; background:#f2f2f2; font-size: 12px; margin-left: 6px; }
-    .footer {
-      position: absolute;
-      bottom: 15px;
-      left: 15px;
-      z-index: 1000;
-      background: rgba(0,0,0,0.65);
-      color: white;
-      padding: 8px 12px;
-      border-radius: 12px;
-      font-size: 13px;
+    .row{ display:flex; gap:8px; align-items:center; margin-top:8px; }
+    .row input[type="text"]{ flex:1; padding:8px; border:1px solid #ddd; border-radius:10px; }
+    .row button, .row select{ padding:8px 10px; border:1px solid #ddd; border-radius:10px; background:#fff; cursor:pointer; }
+    label{ display:block; margin-top:8px; cursor:pointer; }
+    .muted{ color:#666; font-size:12px; margin-top:6px; }
+    .badge{ display:inline-block; padding:2px 8px; border-radius:999px; background:#f2f2f2; font-size:12px; margin-left:6px; }
+    .footer{
+      position:absolute; bottom:15px; left:15px; z-index:1000;
+      background:rgba(0,0,0,.65); color:#fff; padding:8px 12px; border-radius:12px; font-size:13px;
     }
   </style>
 </head>
 
 <body>
   <div class="panel">
-    <div><strong>Karen Radar</strong> <span class="badge" id="countBadge">0</span></div>
-    <div class="muted">Drag “Karen HQ” onto the exact roof once. It saves.</div>
+    <div><strong>Karen Radar</strong> <span class="badge" id="shownBadge">0</span></div>
+    <div class="muted">Drag “Karen HQ” onto your exact roof once. It saves.</div>
 
     <div class="row">
-      <select id="source">
-        <option value="arcgis">Houston ArcGIS (Recent)</option>
-        <option value="scf">SeeClickFix (Issues API)</option>
-      </select>
       <button id="refreshBtn">Refresh</button>
+      <button id="recenterBtn">Recenter</button>
+      <button id="clearBtn">Clear</button>
     </div>
 
     <div class="row">
-      <button id="recenterBtn">Recenter</button>
-      <button id="clearBtn">Clear pins</button>
-    </div>
-
-    <div class="row" title="Search varies by source: ArcGIS uses CaseNumber/Address, SeeClickFix uses issue id/summary/address.">
-      <input id="search" type="text" placeholder="Search case # / issue id / keyword">
+      <input id="search" type="text" placeholder="Search keyword (address/type/case #)">
       <button id="findBtn">Find</button>
     </div>
 
     <label>
       Radius: <span id="radiusLabel">1.00</span> mile
-      <input id="radius" type="range" min="0.25" max="2.0" step="0.25" value="1.0" />
+      <input id="radius" type="range" min="0.25" max="2.0" step="0.25" value="1.0"/>
     </label>
 
-    <label class="muted" style="margin-top:10px;">
-      <input type="checkbox" id="excludeTraffic" checked>
-      Hide traffic spam (signals/signs/etc)
-    </label>
+    <label><input type="checkbox" id="parkingOnly" checked> Parking-ish only</label>
+    <label><input type="checkbox" id="excludeTraffic" checked> Hide traffic spam</label>
 
-    <div class="muted" id="statusLine">Loading…</div>
+    <div class="muted" id="diag">
+      …
+    </div>
   </div>
 
   <div class="footer">Karen Parking Radar</div>
@@ -83,89 +62,48 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // === Your HQ coords ===
+    // ======= YOUR HQ (starting point; you can drag to lock it perfectly) =======
     const DEFAULT_HOME = { lat: 29.828103, lon: -95.426829 };
-
-    // === Sources ===
-    // ArcGIS: table id 3; Active only
-    const ARC_URL =
-      "https://mycity2.houstontx.gov/pubgis01/rest/services/311/Houston311_RecentServiceRequests/FeatureServer/3/query" +
-      "?where=StateCodeName%3D'Active'" +
-      "&outFields=CaseType,Status,Latitude,Longitude,IncidentAddress,CaseNumber365,CaseNumber,CreatedDate,StateCodeName" +
-      "&resultRecordCount=2000&f=json";
-
-    // SeeClickFix: public issues list; we pass lat/lng + status + sort=distance
-    // Docs: GET https://seeclickfix.com/api/v2/issues ; geography supports lat/lng; status supports open/acknowledged/closed etc. :contentReference[oaicite:1]{index=1}
-    function scfUrl(lat, lon) {
-      const u = new URL("https://seeclickfix.com/api/v2/issues");
-      u.searchParams.set("lat", lat);
-      u.searchParams.set("lng", lon);
-      u.searchParams.set("status", "open,acknowledged"); // “active-ish”
-      u.searchParams.set("sort", "distance");
-      u.searchParams.set("sort_direction", "ASC");
-      u.searchParams.set("per_page", "100"); // max 100
-      return u.toString();
-    }
-
-    // === Helpers ===
     const $ = (id) => document.getElementById(id);
 
-    function loadHome() {
+    function loadHome(){
       const raw = localStorage.getItem("karen_home");
-      if (!raw) return { ...DEFAULT_HOME };
-      try {
-        const obj = JSON.parse(raw);
-        if (typeof obj.lat === "number" && typeof obj.lon === "number") return obj;
-      } catch {}
+      if(!raw) return { ...DEFAULT_HOME };
+      try{
+        const o = JSON.parse(raw);
+        if(typeof o.lat==="number" && typeof o.lon==="number") return o;
+      }catch{}
       return { ...DEFAULT_HOME };
     }
-    function saveHome(lat, lon) {
-      localStorage.setItem("karen_home", JSON.stringify({ lat, lon }));
+    function saveHome(lat, lon){ localStorage.setItem("karen_home", JSON.stringify({lat, lon})); }
+
+    // Miles -> degrees (rough, but perfect for a bounding box)
+    function milesToLatDeg(mi){ return mi / 69.0; }
+    function milesToLonDeg(mi, lat){ return mi / (69.0 * Math.cos(lat * Math.PI/180)); }
+
+    function isTrafficSpam(text){
+      const t=(text||"").toLowerCase();
+      return t.includes("traffic signal") || t.includes("traffic sign") || t.includes("traffic signals") || t.includes("traffic signs");
+    }
+    function isParkingish(text){
+      const t=(text||"").toLowerCase();
+      // Houston doesn't always say "parking" — this catches the usual suspects
+      return t.includes("park") || t.includes("vehicle") || t.includes("tow") || t.includes("blocked driveway") || t.includes("obstruction");
     }
 
-    function milesBetween(lat1, lon1, lat2, lon2) {
-      const R = 3958.8;
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a =
-        Math.sin(dLat/2) ** 2 +
-        Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
-        Math.sin(dLon/2) ** 2;
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    }
-
-    function looksLikeHoustonLatLon(lat, lon) {
-      return Number.isFinite(lat) && Number.isFinite(lon) && lat > 29 && lat < 31 && lon < -94 && lon > -96;
-    }
-
-    function isTrafficSpam(text) {
-      const t = (text || "").toLowerCase();
-      return (
-        t.includes("traffic signal") ||
-        t.includes("traffic sign") ||
-        t.includes("traffic signals") ||
-        t.includes("traffic signs") ||
-        t.includes("signal") && t.includes("traffic") ||
-        t.includes("sign") && t.includes("traffic")
-      );
-    }
-
-    // === Map init ===
+    // ======= Map =======
     let HOME = loadHome();
     let radiusMiles = 1.0;
 
     const map = L.map("map").setView([HOME.lat, HOME.lon], 16);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
-    const hqMarker = L.marker([HOME.lat, HOME.lon], { draggable: true })
+    const hqMarker = L.marker([HOME.lat, HOME.lon], { draggable:true })
       .addTo(map)
       .bindPopup("🏠 Karen HQ (drag me onto the exact roof)")
       .openPopup();
 
-    const radiusCircle = L.circle([HOME.lat, HOME.lon], {
-      radius: radiusMiles * 1609.34,
-      fillOpacity: 0.05
-    }).addTo(map);
+    const radiusCircle = L.circle([HOME.lat, HOME.lon], { radius: radiusMiles*1609.34, fillOpacity:0.05 }).addTo(map);
 
     hqMarker.on("dragend", () => {
       const ll = hqMarker.getLatLng();
@@ -176,169 +114,169 @@
       refresh();
     });
 
-    // === Rendering state ===
-    let markers = new Map();   // id -> marker
-    let latest = [];           // normalized records (common shape)
-    let known = new Set();     // for “new” animation
+    // ======= Data + Pins =======
+    let latest = [];          // raw attributes from ArcGIS
+    let markers = new Map();  // caseId -> marker
 
-    function clearPins() {
-      for (const m of markers.values()) map.removeLayer(m);
+    function clearPins(){
+      for(const m of markers.values()) map.removeLayer(m);
       markers.clear();
-      $("countBadge").textContent = "0";
+      $("shownBadge").textContent = "0";
     }
 
-    function popIn(marker) {
-      marker.setStyle({ opacity: 0, fillOpacity: 0 });
-      setTimeout(() => marker.setStyle({ opacity: 1, fillOpacity: 0.7 }), 60);
-    }
+    function addPin(a){
+      const lat = Number(a.Latitude);
+      const lon = Number(a.Longitude);
+      if(!Number.isFinite(lat) || !Number.isFinite(lon)) return;
 
-    function addPin(rec) {
-      const { id, lat, lon, title, status, address, rawType } = rec;
-      if (markers.has(id)) return;
+      const id = String(a.CaseNumber365 || a.CaseNumber || a.ObjectID || (a.IncidentAddress||"") + "::" + (a.CreatedDate||""));
+      if(markers.has(id)) return;
 
-      const dist = milesBetween(HOME.lat, HOME.lon, lat, lon);
-      if (dist > radiusMiles) return;
+      const title = a.CaseType || "311";
+      const status = a.StateCodeName || a.Status || "Active";
+      const address = a.IncidentAddress || "";
 
-      if ($("excludeTraffic").checked && isTrafficSpam(rawType || title)) return;
-
-      const marker = L.circleMarker([lat, lon], { radius: 7 })
+      const marker = L.circleMarker([lat, lon], { radius: 8 })
         .addTo(map)
         .bindPopup(
-          `<b>${title || "Unknown"}</b><br>` +
-          `Status: ${status || "Unknown"}<br>` +
-          `Distance: ${dist.toFixed(2)} mi<br>` +
-          `${address || ""}<br>` +
-          `<span class="muted">id: ${id}</span>`
+          `<b>${title}</b><br>` +
+          `Status: ${status}<br>` +
+          `${address}<br>` +
+          `<span class="muted">CaseNumber365: ${a.CaseNumber365||""} | CaseNumber: ${a.CaseNumber||""}</span>`
         );
 
+      // pop-in animation
+      marker.setStyle({ opacity:0, fillOpacity:0 });
+      setTimeout(() => marker.setStyle({ opacity:1, fillOpacity:0.7 }), 60);
+
       markers.set(id, marker);
-
-      if (!known.has(id)) {
-        known.add(id);
-        popIn(marker);
-      }
     }
 
-    function render() {
+    function render(){
       clearPins();
-      latest.forEach(addPin);
-      $("countBadge").textContent = String(markers.size);
-      $("statusLine").textContent = `Showing ${markers.size} within ${radiusMiles.toFixed(2)} mi.`;
+
+      let shown = 0;
+      const parkingOnly = $("parkingOnly").checked;
+      const excludeTraffic = $("excludeTraffic").checked;
+
+      for(const a of latest){
+        const type = a.CaseType || "";
+        if(excludeTraffic && isTrafficSpam(type)) continue;
+        if(parkingOnly && !isParkingish(type)) continue;
+
+        addPin(a);
+      }
+
+      shown = markers.size;
+      $("shownBadge").textContent = String(shown);
     }
 
-    // === Normalize data from each source into common records ===
-    function normalizeArcGIS(data) {
-      const feats = data.features || [];
-      return feats.map(f => f.attributes || {}).map(a => {
-        const lat = Number(a.Latitude);
-        const lon = Number(a.Longitude);
-        return {
-          id: String(a.CaseNumber365 || a.CaseNumber || a.ObjectID || Math.random()),
-          lat, lon,
-          title: a.CaseType || "Houston 311",
-          status: a.StateCodeName || a.Status || "Active",
-          address: a.IncidentAddress || "",
-          rawType: a.CaseType || ""
-        };
-      }).filter(r => looksLikeHoustonLatLon(r.lat, r.lon));
+    // ======= ArcGIS query: ACTIVE only + 1-mile bounding box =======
+    // This is the big improvement: we query only around HQ so we don't hit transfer limits and we don't miss your neighborhood.
+    function buildArcgisUrl(){
+      const latPad = milesToLatDeg(radiusMiles) * 1.25;      // +25% slack
+      const lonPad = milesToLonDeg(radiusMiles, HOME.lat) * 1.25;
+
+      const minLat = (HOME.lat - latPad).toFixed(6);
+      const maxLat = (HOME.lat + latPad).toFixed(6);
+      const minLon = (HOME.lon - lonPad).toFixed(6);
+      const maxLon = (HOME.lon + lonPad).toFixed(6);
+
+      // Active only + bounding box based on Latitude/Longitude fields
+      const where =
+        `StateCodeName='Active' AND Latitude >= ${minLat} AND Latitude <= ${maxLat} AND Longitude >= ${minLon} AND Longitude <= ${maxLon}`;
+
+      const url =
+        "https://mycity2.houstontx.gov/pubgis01/rest/services/311/Houston311_RecentServiceRequests/FeatureServer/3/query" +
+        `?where=${encodeURIComponent(where)}` +
+        "&outFields=CaseType,Status,StateCodeName,Latitude,Longitude,IncidentAddress,CaseNumber365,CaseNumber,CreatedDate" +
+        "&resultRecordCount=2000&f=json";
+
+      return url;
     }
 
-    function normalizeSCF(data) {
-      const issues = data.issues || data.result || []; // docs show "issues" array :contentReference[oaicite:2]{index=2}
-      return issues.map(i => {
-        const lat = Number(i.lat);
-        const lon = Number(i.lng);
-        return {
-          id: String(i.id),
-          lat, lon,
-          title: i.summary || "SeeClickFix Issue",
-          status: i.status || "",
-          address: i.address || "",
-          rawType: i.summary || ""
-        };
-      }).filter(r => looksLikeHoustonLatLon(r.lat, r.lon));
-    }
+    async function refresh(){
+      $("diag").textContent = "Refreshing…";
+      try{
+        const url = buildArcgisUrl();
+        const res = await fetch(url);
+        const data = await res.json();
 
-    async function refresh() {
-      $("statusLine").textContent = "Refreshing…";
-      try {
-        const source = $("source").value;
-        let res, data;
+        const feats = data.features || [];
+        latest = feats.map(f => f.attributes || {});
 
-        if (source === "arcgis") {
-          res = await fetch(ARC_URL);
-          data = await res.json();
-          latest = normalizeArcGIS(data);
-        } else {
-          const url = scfUrl(HOME.lat, HOME.lon);
-          res = await fetch(url);
-          data = await res.json();
-          latest = normalizeSCF(data);
-        }
+        // Diagnostics so you can see if the API is returning anything near you at all
+        const sampleTypes = latest.slice(0,5).map(a => a.CaseType).filter(Boolean).join(" | ");
+        $("diag").innerHTML =
+          `<div><b>ArcGIS</b> returned: ${feats.length} (bbox around HQ)</div>` +
+          `<div>HQ: ${HOME.lat.toFixed(6)}, ${HOME.lon.toFixed(6)} | radius ${radiusMiles.toFixed(2)} mi</div>` +
+          `<div class="muted">Sample types: ${sampleTypes || "(none)"}</div>`;
 
         render();
-      } catch (e) {
+      }catch(e){
         console.error(e);
-        $("statusLine").textContent = "API error (check Console).";
+        $("diag").textContent = "API error. Open DevTools Console for details.";
       }
     }
 
-    function find() {
+    function find(){
       const q = $("search").value.trim().toLowerCase();
-      if (!q) return;
+      if(!q) return;
 
-      const hit = latest.find(r =>
-        String(r.id).toLowerCase().includes(q) ||
-        String(r.title).toLowerCase().includes(q) ||
-        String(r.address).toLowerCase().includes(q)
-      );
+      const hit = latest.find(a => {
+        return (
+          String(a.CaseNumber365||"").toLowerCase().includes(q) ||
+          String(a.CaseNumber||"").toLowerCase().includes(q) ||
+          String(a.IncidentAddress||"").toLowerCase().includes(q) ||
+          String(a.CaseType||"").toLowerCase().includes(q)
+        );
+      });
 
-      if (!hit) {
-        alert("Not found in the CURRENT selected source. Try switching source and refreshing.");
+      if(!hit){
+        alert("Not found in the *public recent ArcGIS feed* for your 1-mile bbox. If the portal case is not mirrored here, it won’t be searchable by GUID.");
         return;
       }
 
-      map.setView([hit.lat, hit.lon], 17);
-      const m = markers.get(hit.id);
-      if (m) m.openPopup();
-      else {
-        // force-spotlight even if filtered out by radius (should be rare)
-        const spot = L.circleMarker([hit.lat, hit.lon], { radius: 12 }).addTo(map)
-          .bindPopup(`<b>🎯 FOUND</b><br>${hit.title}<br>${hit.address}`).openPopup();
-        setTimeout(() => map.removeLayer(spot), 8000);
-      }
+      const lat = Number(hit.Latitude), lon = Number(hit.Longitude);
+      map.setView([lat, lon], 17);
+      // quick spotlight
+      const spot = L.circleMarker([lat, lon], { radius: 14 }).addTo(map)
+        .bindPopup("🎯 FOUND<br><b>" + (hit.CaseType||"") + "</b><br>" + (hit.IncidentAddress||""))
+        .openPopup();
+      setTimeout(() => map.removeLayer(spot), 8000);
     }
 
-    // === UI wiring ===
+    // ======= UI wiring =======
+    $("radiusLabel").textContent = radiusMiles.toFixed(2);
+
     $("radius").addEventListener("input", (e) => {
       radiusMiles = Number(e.target.value);
       $("radiusLabel").textContent = radiusMiles.toFixed(2);
       radiusCircle.setRadius(radiusMiles * 1609.34);
-      render();
+      refresh(); // rebuild bbox query
     });
 
     $("refreshBtn").addEventListener("click", refresh);
-    $("source").addEventListener("change", refresh);
-    $("excludeTraffic").addEventListener("change", render);
-
     $("recenterBtn").addEventListener("click", () => {
       map.setView([HOME.lat, HOME.lon], 16);
       hqMarker.setLatLng([HOME.lat, HOME.lon]);
       radiusCircle.setLatLng([HOME.lat, HOME.lon]);
     });
-
     $("clearBtn").addEventListener("click", () => {
       clearPins();
-      $("statusLine").textContent = "Cleared pins. Hit Refresh to reload.";
+      $("diag").textContent = "Cleared pins. Hit Refresh.";
     });
 
-    $("findBtn").addEventListener("click", find);
-    $("search").addEventListener("keydown", (e) => { if (e.key === "Enter") find(); });
+    $("parkingOnly").addEventListener("change", render);
+    $("excludeTraffic").addEventListener("change", render);
 
-    // init
-    $("radiusLabel").textContent = radiusMiles.toFixed(2);
+    $("findBtn").addEventListener("click", find);
+    $("search").addEventListener("keydown", (e) => { if(e.key==="Enter") find(); });
+
+    // init + auto refresh
     refresh();
-    setInterval(refresh, 30000); // auto-refresh + “new complaint pop-in”
+    setInterval(refresh, 30000);
   </script>
 </body>
 </html>
+
