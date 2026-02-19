@@ -2,773 +2,220 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>🚨 Emergency Karen Broadcast System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Whispers from the Curb</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
   <style>
     :root{
-      --bg: #06070a;
-      --panel: rgba(15, 17, 22, 0.94);
-      --panel2: rgba(10, 12, 16, 0.92);
-      --ink: #f3f5ff;
-      --muted: rgba(243,245,255,0.75);
-      --danger: #ff2a2a;
-      --warn: #ffcc00;
-      --ok: #2bff88;
-      --line: rgba(255,255,255,0.12);
+      --paper: #fbfaf7;
+      --ink: #1e1b18;
+      --muted: #6f6a64;
+      --accent: #b48a3c;
+      --line: #e6e2db;
+      --soft: #f3f1ec;
       --radius: 18px;
     }
 
-    html, body { height: 100%; margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    body{
-      background:
-        radial-gradient(900px 600px at 15% 15%, rgba(255,42,42,0.15), transparent 55%),
-        radial-gradient(900px 600px at 85% 35%, rgba(255,204,0,0.10), transparent 55%),
-        linear-gradient(180deg, #030408, var(--bg));
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: var(--paper);
       color: var(--ink);
+      font-family: "Playfair Display", Georgia, serif;
     }
 
-    .app{
-      height: 100%;
-      display: grid;
-      grid-template-columns: 520px 1fr;
-      gap: 14px;
-      padding: 14px;
+    body{
+      display: flex;
+      justify-content: center;
+    }
+
+    .page{
+      width: min(1100px, 100%);
+      padding: 28px 20px 40px;
       box-sizing: border-box;
     }
 
-    .left{
-      background: var(--panel);
-      border-radius: var(--radius);
-      border: 1px solid var(--line);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-      box-shadow: 0 18px 60px rgba(0,0,0,0.55);
+    /* TITLE */
+    .masthead{
+      text-align: center;
+      margin-bottom: 26px;
     }
 
-    .right{
-      background: var(--panel2);
-      border-radius: var(--radius);
-      border: 1px solid var(--line);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-      box-shadow: 0 18px 60px rgba(0,0,0,0.55);
-    }
-
-    /* HEADER */
-    .header{
-      padding: 14px 14px 12px 14px;
-      border-bottom: 1px solid var(--line);
-      background:
-        repeating-linear-gradient(
-          90deg,
-          rgba(255,42,42,0.18) 0px,
-          rgba(255,42,42,0.18) 12px,
-          rgba(0,0,0,0.0) 12px,
-          rgba(0,0,0,0.0) 24px
-        );
-    }
-
-    .h1{
+    .masthead h1{
+      font-size: 44px;
       margin: 0;
-      font-weight: 900;
-      letter-spacing: 1px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      font-size: 16px;
-      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    .tag{
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.22);
-      background: rgba(0,0,0,0.35);
-      font-size: 12px;
-    }
-
-    .ticker{
-      margin-top: 8px;
-      font-size: 12px;
+    .masthead p{
+      margin: 8px 0 0;
+      font-size: 15px;
       color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
+      font-style: italic;
     }
 
-    /* CHAOS METER (PROMINENT) */
-    .chaosWrap{
-      margin-top: 10px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.18);
-      background: rgba(0,0,0,0.40);
+    .rule{
+      margin: 22px 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--line), transparent);
     }
-    .chaosTop{
-      display:flex; align-items: center; justify-content: space-between; gap: 10px;
-      font-weight: 900;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      font-size: 12px;
+
+    /* CHAOS */
+    .chaos{
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      text-align: center;
+      margin-bottom: 18px;
     }
-    .chaosValue{
-      font-size: 22px;
-      font-weight: 1000;
+
+    .chaos strong{
+      font-size: 13px;
       letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .chaos .count{
+      font-size: 40px;
       margin-top: 6px;
-      display:flex;
-      align-items: baseline;
-      gap: 10px;
-      flex-wrap: wrap;
+      color: var(--accent);
     }
-    .chaosValue .count{
-      color: var(--warn);
-      text-shadow: 0 0 18px rgba(255,204,0,0.25);
+
+    .chaos .label{
+      margin-top: 4px;
+      font-size: 14px;
+      color: var(--muted);
     }
-    .bar{
-      margin-top: 10px;
-      height: 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.10);
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.14);
-    }
-    .bar > div{
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, var(--ok), var(--warn), var(--danger));
-      filter: saturate(1.2);
-      box-shadow: 0 0 25px rgba(255,42,42,0.18);
-      transition: width 300ms ease;
+
+    /* MAP */
+    #map{
+      height: 360px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      margin-bottom: 18px;
     }
 
     /* CONTROLS */
     .controls{
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--line);
-      display: grid;
+      display: flex;
       gap: 10px;
-      background: rgba(0,0,0,0.18);
+      flex-wrap: wrap;
+      margin-bottom: 18px;
     }
 
-    .row{ display:flex; gap: 8px; align-items:center; }
-    input[type="text"]{
-      flex: 1;
-      padding: 10px 10px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.18);
-      background: rgba(0,0,0,0.35);
-      color: var(--ink);
-      outline: none;
-    }
-    input[type="text"]::placeholder{ color: rgba(243,245,255,0.55); }
-
-    button{
-      padding: 10px 10px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.18);
-      background: rgba(0,0,0,0.55);
-      color: var(--ink);
-      cursor: pointer;
-      font-weight: 900;
-      letter-spacing: 0.3px;
-      text-transform: uppercase;
-    }
-    button:hover{ filter: brightness(1.12); }
-    button:active{ transform: translateY(1px); }
-
-    label{
-      display:flex; align-items:center; gap: 10px;
-      font-size: 12px;
-      color: var(--muted);
-      user-select: none;
-    }
-    input[type="checkbox"]{ transform: scale(1.05); }
-
-    .metaLine{
-      color: rgba(243,245,255,0.75);
-      font-size: 12px;
-      line-height: 1.3;
+    .controls button,
+    .controls input{
+      font-family: inherit;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #fff;
     }
 
-    /* DIGEST BIG + READABLE */
-    .digestWrap{
-      flex: 1;
-      min-height: 0;
-      display:flex;
-      flex-direction: column;
-      background: rgba(0,0,0,0.12);
-    }
-
-    .digestHeader{
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--line);
-      display:flex;
-      align-items:center;
-      justify-content: space-between;
-      gap: 10px;
-      background: rgba(0,0,0,0.30);
-      position: sticky;
-      top: 0;
-      z-index: 5;
-    }
-    .digestHeader strong{
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      font-size: 12px;
-    }
-    .stamp{ color: rgba(243,245,255,0.65); font-size: 11px; }
-
-    .digestBox{
-      flex: 1;
-      min-height: 0;
-      overflow: auto;
-      padding: 14px;
+    .controls label{
+      display: flex;
+      align-items: center;
+      gap: 6px;
       font-size: 13px;
-      line-height: 1.55;
+      color: var(--muted);
+    }
+
+    /* DIGEST */
+    .digest{
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+    }
+
+    .digest h2{
+      margin: 0 0 12px;
+      font-size: 22px;
+    }
+
+    .digest pre{
       white-space: pre-wrap;
-    }
-
-    /* Make key sections stand out */
-    .digestBox .k{ color: var(--warn); font-weight: 900; }
-    .digestBox .g{ color: var(--ok); font-weight: 900; }
-    .digestBox .r{ color: var(--danger); font-weight: 900; }
-
-    /* MAP AREA SMALLER */
-    .mapTop{
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--line);
-      display:flex;
-      align-items:center;
-      justify-content: space-between;
-      gap: 10px;
-      background: rgba(0,0,0,0.35);
-      color: rgba(243,245,255,0.88);
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      font-weight: 900;
-    }
-
-    #map{
-      height: 360px;  /* <— smaller map */
-      width: 100%;
-    }
-
-    .mapBottom{
-      flex: 1;
-      padding: 12px;
-      color: rgba(243,245,255,0.7);
-      font-size: 12px;
-      line-height: 1.4;
-    }
-    .mapBottom b{ color: rgba(243,245,255,0.95); }
-
-    /* Leaflet controls vibe */
-    .leaflet-control-zoom a{
-      background: rgba(0,0,0,0.55) !important;
-      color: var(--ink) !important;
-      border: 1px solid rgba(255,255,255,0.18) !important;
-      box-shadow: 0 0 18px rgba(255,42,42,0.12);
+      font-family: "Georgia", serif;
+      font-size: 14px;
+      line-height: 1.55;
+      margin: 0;
     }
 
     a.caseLink{
-      color: #9efcff;
+      color: var(--accent);
+      font-weight: 600;
       text-decoration: underline;
-      font-weight: 900;
     }
 
-    @media (max-width: 1060px){
-      .app{ grid-template-columns: 1fr; }
-      #map{ height: 320px; }
+    .leaflet-control-zoom a{
+      background: #fff !important;
+      border: 1px solid var(--line) !important;
     }
   </style>
 </head>
 
 <body>
-  <div class="app">
-    <!-- LEFT -->
-    <section class="left">
-      <div class="header">
-        <h1 class="h1">
-          🚨 Emergency Karen Broadcast System
-          <span class="tag" id="pinTag">0 PINS</span>
-          <span class="tag">🚨🚨🚨</span>
-        </h1>
-        <div class="ticker" id="ticker">
-          “WE ARE EXPERIENCING ELEVATED ENTITLEMENT LEVELS IN YOUR AREA.”
-        </div>
+  <div class="page">
+    <div class="masthead">
+      <h1>Whispers from the Curb</h1>
+      <p>Dearest reader, one’s neighborhood rarely rests quietly…</p>
+    </div>
 
-        <div class="chaosWrap">
-          <div class="chaosTop">
-            <span>Chaos Meter</span>
-            <span id="radiusMini">Radius: 1.00 mi</span>
-          </div>
-          <div class="chaosValue">
-            <span class="count" id="chaosCount">0</span>
-            <span id="chaosLabel">blessed silence</span>
-          </div>
-          <div class="bar"><div id="chaosBar"></div></div>
-        </div>
-      </div>
+    <div class="rule"></div>
 
-      <div class="controls">
-        <div class="row">
-          <button id="refreshBtn">Refresh</button>
-          <button id="recenterBtn">Recenter</button>
-          <button id="clearBtn">Clear</button>
-        </div>
+    <div class="chaos">
+      <strong>Current State of Affairs</strong>
+      <div class="count" id="chaosCount">0</div>
+      <div class="label" id="chaosLabel">All is calm</div>
+    </div>
 
-        <div class="row">
-          <input id="search" type="text" placeholder="Search (address / case # / type)" />
-          <button id="findBtn">Find</button>
-        </div>
+    <div id="map"></div>
 
-        <label>
-          <span>Radius</span>
-          <input id="radius" type="range" min="0.25" max="2.0" step="0.25" value="1.0" />
-          <span id="radiusLabel">1.00</span> mi
-        </label>
+    <div class="controls">
+      <button id="refreshBtn">Refresh intelligence</button>
+      <label><input type="checkbox" id="parkingOnly" checked> Parking only</label>
+      <label><input type="checkbox" id="excludeTraffic" checked> Exclude traffic</label>
+    </div>
 
-        <label><input type="checkbox" id="parkingOnly" checked> 🚗 Parking-ish only</label>
-        <label><input type="checkbox" id="excludeTraffic" checked> 🚦 Hide traffic spam</label>
-
-        <div class="metaLine" id="diag">Loading…</div>
-      </div>
-
-      <div class="digestWrap">
-        <div class="digestHeader">
-          <strong>📬 Daily Digest</strong>
-          <span class="stamp" id="digestStamp">—</span>
-        </div>
-        <div class="digestBox" id="digestBox">Digest will appear here.</div>
-      </div>
-    </section>
-
-    <!-- RIGHT -->
-    <section class="right">
-      <div class="mapTop">🚨 Situation Map (small but petty)</div>
-      <div id="map"></div>
-      <div class="mapBottom">
-        <b>Receipts mode:</b> Click a siren dot → popup shows details + a link.
-        <br><br>
-        <span style="opacity:0.8">
-          If ArcGIS doesn’t provide a direct case URL, the link opens Houston’s “check case status” page (search by case #).
-        </span>
-      </div>
-    </section>
+    <div class="digest">
+      <h2>📰 The Daily Dispatch</h2>
+      <pre id="digestBox">Gathering whispers…</pre>
+    </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
   <script>
-    // ===== HQ defaults =====
-    const DEFAULT_HOME = { lat: 29.828103, lon: -95.426829 };
-    const $ = (id) => document.getElementById(id);
+    const HOME = { lat: 29.828103, lon: -95.426829 };
+    const RADIUS_MI = 1.0;
+    const $ = id => document.getElementById(id);
 
-    function loadHome(){
-      const raw = localStorage.getItem("karen_home");
-      if(!raw) return { ...DEFAULT_HOME };
-      try{
-        const o = JSON.parse(raw);
-        if(typeof o.lat==="number" && typeof o.lon==="number") return o;
-      }catch{}
-      return { ...DEFAULT_HOME };
+    function isTraffic(t){
+      return (t||"").toLowerCase().includes("traffic");
     }
-    function saveHome(lat, lon){ localStorage.setItem("karen_home", JSON.stringify({lat, lon})); }
-
-    // ===== Daily digest snapshot =====
-    const SNAP_KEY = "karen_daily_snap_v1";
-    const LAST_DATE_KEY = "karen_daily_date_v1";
-
-    function todayLocalYYYYMMDD(){
-      const d = new Date();
-      const y = d.getFullYear();
-      const m = String(d.getMonth()+1).padStart(2,"0");
-      const day = String(d.getDate()).padStart(2,"0");
-      return `${y}-${m}-${day}`;
+    function isParking(t){
+      return (t||"").toLowerCase().match(/park|vehicle|tow|driveway|abandoned/);
     }
-
-    // ===== Filters =====
-    function isTrafficSpam(text){
-      const t=(text||"").toLowerCase();
-      return t.includes("traffic signal") || t.includes("traffic sign") || t.includes("traffic signals") || t.includes("traffic signs") || t.includes("traffic");
-    }
-    function isParkingish(text){
-      const t=(text||"").toLowerCase();
-      return (
-        t.includes("park") ||
-        t.includes("vehicle") ||
-        t.includes("tow") ||
-        t.includes("blocked driveway") ||
-        t.includes("obstruction") ||
-        t.includes("illegally parked") ||
-        t.includes("abandoned vehicle") ||
-        t.includes("junk motor vehicle")
-      );
-    }
-
-    function milesToLatDeg(mi){ return mi / 69.0; }
-    function milesToLonDeg(mi, lat){ return mi / (69.0 * Math.cos(lat * Math.PI/180)); }
-
-    function makeCaseId(a){
-      return String(a.CaseNumber365 || a.CaseNumber || a.ObjectID || (a.IncidentAddress||"") + "::" + (a.CreatedDate||""));
-    }
-    function normStatus(a){
-      return (a.StateCodeName || a.Status || "").toLowerCase().trim();
-    }
-    function isOpenish(status){
-      return status.includes("active") || status.includes("open") || status.includes("routed") || status.includes("acknowledged");
-    }
-
-    // ===== Case links =====
-    // If ArcGIS doesn't provide a URL, we can send user to case status search page.
-    // NOTE: This is the public portal root; the user can paste case # there if needed.
-    const CASE_STATUS_SEARCH_URL = "https://houston311.powerappsportals.us/en-US/checkcasestatus/";
-
-    function buildCaseLink(a){
-      // Best: if we ever get a direct guid field, we could link to /casedetail/?id=...
-      // In this layer we usually have CaseNumber365 / CaseNumber, not the guid.
-      const cn = a.CaseNumber365 || a.CaseNumber;
-      if (cn) {
-        // Link to the check status page with a hint (we can't guarantee query params exist)
-        return { text: `Open case status page (copy case # ${cn})`, url: CASE_STATUS_SEARCH_URL };
-      }
-      return { text: "Open case status page", url: CASE_STATUS_SEARCH_URL };
-    }
-
-    // ===== Map =====
-    let HOME = loadHome();
-    let radiusMiles = 1.0;
 
     const map = L.map("map").setView([HOME.lat, HOME.lon], 16);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
-    const hqMarker = L.marker([HOME.lat, HOME.lon], { draggable:true })
-      .addTo(map)
-      .bindPopup("🏠 Karen HQ (drag me onto the exact roof)")
-      .openPopup();
+    L.marker([HOME.lat, HOME.lon]).addTo(map).bindPopup("Your residence");
 
-    const radiusCircle = L.circle([HOME.lat, HOME.lon], { radius: radiusMiles*1609.34, fillOpacity:0.06 }).addTo(map);
-
-    hqMarker.on("dragend", async () => {
-      const ll = hqMarker.getLatLng();
-      HOME = { lat: ll.lat, lon: ll.lng };
-      saveHome(HOME.lat, HOME.lon);
-      radiusCircle.setLatLng([HOME.lat, HOME.lon]);
-      map.panTo([HOME.lat, HOME.lon]);
-      await refresh();
-    });
-
-    // ===== Pins =====
-    let latest = [];
-    let markers = new Map();
+    let markers = [];
 
     function clearPins(){
-      for(const m of markers.values()) map.removeLayer(m);
-      markers.clear();
-      updateChaos();
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
     }
 
-    function addPin(a){
-      const lat = Number(a.Latitude);
-      const lon = Number(a.Longitude);
-      if(!Number.isFinite(lat) || !Number.isFinite(lon)) return;
-
-      const id = makeCaseId(a);
-      if(markers.has(id)) return;
-
-      const title = a.CaseType || "311";
-      const status = a.StateCodeName || a.Status || "Active";
-      const address = a.IncidentAddress || "";
-
-      const link = buildCaseLink(a);
-
-      // Siren-style marker: emoji inside a DivIcon
-      const icon = L.divIcon({
-        className: "",
-        html: `<div style="
-          width: 26px; height: 26px; display:grid; place-items:center;
-          border-radius: 999px;
-          background: rgba(0,0,0,0.55);
-          border: 1px solid rgba(255,255,255,0.18);
-          box-shadow: 0 0 18px rgba(255,42,42,0.25);
-          font-size: 16px;
-        ">🚨</div>`,
-        iconSize: [26, 26],
-        iconAnchor: [13, 13]
-      });
-
-      const marker = L.marker([lat, lon], { icon }).addTo(map);
-
-      // Popup with a link
-      marker.bindPopup(
-        `<div style="font-family: ui-monospace, Menlo, Consolas, monospace; line-height:1.35;">
-          <div style="font-weight:900; letter-spacing:0.6px; text-transform:uppercase;">${title}</div>
-          <div>Status: <b>${status}</b></div>
-          <div style="margin-top:6px;">${address}</div>
-          <div style="margin-top:8px;">
-            <a class="caseLink" href="${link.url}" target="_blank" rel="noopener noreferrer">${link.text}</a>
-          </div>
-          <div style="margin-top:8px; color:rgba(243,245,255,0.75); font-size:12px;">
-            Case #365: ${a.CaseNumber365 || "—"} | Case #: ${a.CaseNumber || "—"}
-          </div>
-        </div>`
-      );
-
-      markers.set(id, marker);
-    }
-
-    function updateChaos(){
-      const n = markers.size;
-      $("pinTag").textContent = `${n} PINS`;
-
-      const label =
-        n === 0 ? "✅ ALL QUIET. NO MANAGERS SUMMONED." :
-        n <= 2 ? "👀 LOW-GRADE ENTITLEMENT DETECTED." :
-        n <= 6 ? "😤 ELEVATED COMPLAINT ACTIVITY." :
-        n <= 12 ? "🚨 SEV-1 KAREN OUTBREAK." : "🧨 FULL KAREN STORM. SEEK SHELTER.";
-
-      $("chaosCount").textContent = String(n);
-      $("chaosLabel").textContent = label;
-
-      // Scale bar 0..20+ => 0..100%
-      const pct = Math.min(100, Math.round((n / 20) * 100));
-      $("chaosBar").style.width = pct + "%";
-    }
-
-    function render(){
-      clearPins();
-
-      const parkingOnly = $("parkingOnly").checked;
-      const excludeTraffic = $("excludeTraffic").checked;
-
-      for(const a of latest){
-        const type = a.CaseType || "";
-        if(excludeTraffic && isTrafficSpam(type)) continue;
-        if(parkingOnly && !isParkingish(type)) continue;
-        addPin(a);
-      }
-
-      updateChaos();
-    }
-
-    function buildArcgisUrl(){
-      const latPad = milesToLatDeg(radiusMiles) * 1.25;
-      const lonPad = milesToLonDeg(radiusMiles, HOME.lat) * 1.25;
-
-      const minLat = (HOME.lat - latPad).toFixed(6);
-      const maxLat = (HOME.lat + latPad).toFixed(6);
-      const minLon = (HOME.lon - lonPad).toFixed(6);
-      const maxLon = (HOME.lon + lonPad).toFixed(6);
-
-      const where =
-        `Latitude >= ${minLat} AND Latitude <= ${maxLat} AND Longitude >= ${minLon} AND Longitude <= ${maxLon}`;
-
-      return (
-        "https://mycity2.houstontx.gov/pubgis01/rest/services/311/Houston311_RecentServiceRequests/FeatureServer/3/query" +
-        `?where=${encodeURIComponent(where)}` +
-        "&outFields=CaseType,Status,StateCodeName,Latitude,Longitude,IncidentAddress,CaseNumber365,CaseNumber,CreatedDate,ClosedDate" +
-        "&resultRecordCount=2000&f=json"
-      );
-    }
-
-    function formatDigestHTML(text){
-      // Convert plain digest to styled HTML for readability
-      // We color key headers and keep line breaks.
-      const esc = (s) => s
-        .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
-
-      const lines = esc(text).split("\n");
-      const out = lines.map(line => {
-        if (line.startsWith("📬")) return `<div class="k">${line}</div>`;
-        if (line.startsWith("✅")) return `<div class="g">${line}</div>`;
-        if (line.startsWith("🚗")) return `<div class="k">${line}</div>`;
-        if (line.startsWith("🔁")) return `<div class="k">${line}</div>`;
-        if (line.startsWith("🆕")) return `<div class="k">${line}</div>`;
-        if (line.startsWith("👻")) return `<div class="r">${line}</div>`;
-        if (line.startsWith("•")) return `<div style="margin-left:10px">${line}</div>`;
-        return `<div>${line}</div>`;
-      }).join("");
-      return out;
-    }
-
-    function buildDailyDigest(currentParkingCases){
-      const today = todayLocalYYYYMMDD();
-      const lastDate = localStorage.getItem(LAST_DATE_KEY);
-      const prevSnapRaw = localStorage.getItem(SNAP_KEY);
-      const prevSnap = prevSnapRaw ? JSON.parse(prevSnapRaw) : {}; // {id: status}
-
-      const todaySnap = {};
-      for (const c of currentParkingCases) todaySnap[c.id] = c.status;
-
-      const openNow = currentParkingCases.filter(c => isOpenish(c.status));
-      const changed = [];
-      const newlySeen = [];
-
-      for (const c of currentParkingCases) {
-        if (!prevSnap[c.id]) newlySeen.push(c);
-        else if (prevSnap[c.id] !== c.status) changed.push({ ...c, before: prevSnap[c.id] });
-      }
-
-      const missing = [];
-      for (const prevId of Object.keys(prevSnap)) {
-        if (!todaySnap[prevId]) missing.push(prevId);
-      }
-
-      let out = `📬 Daily Digest (${today})\n`;
-      if (lastDate === today) out += "(Already generated today — showing latest.)\n\n";
-      else out += "\n";
-
-      if (openNow.length === 0 && changed.length === 0 && newlySeen.length === 0 && missing.length === 0) {
-        out += "✅ No parking-ish drama detected near HQ.\n";
-      } else {
-        if (openNow.length) {
-          out += `🚗 Open parking-ish near HQ: ${openNow.length}\n`;
-          openNow.slice(0, 10).forEach(c => out += `• ${c.type} — ${c.address} (${c.status})\n`);
-          if (openNow.length > 10) out += `…and ${openNow.length - 10} more\n`;
-          out += "\n";
-        }
-
-        if (changed.length) {
-          out += `🔁 Status changes: ${changed.length}\n`;
-          changed.slice(0, 10).forEach(c => out += `• ${c.type} — ${c.address} (${c.before} → ${c.status})\n`);
-          if (changed.length > 10) out += `…and ${changed.length - 10} more\n`;
-          out += "\n";
-        }
-
-        if (newlySeen.length) {
-          out += `🆕 New since last digest: ${newlySeen.length}\n`;
-          newlySeen.slice(0, 10).forEach(c => out += `• ${c.type} — ${c.address} (${c.status})\n`);
-          if (newlySeen.length > 10) out += `…and ${newlySeen.length - 10} more\n`;
-          out += "\n";
-        }
-
-        if (missing.length) {
-          out += `👻 Disappeared since last digest: ${missing.length}\n`;
-          out += "(Often means closed or aged out of the public ‘recent’ feed.)\n";
-        }
-      }
-
-      localStorage.setItem(SNAP_KEY, JSON.stringify(todaySnap));
-      localStorage.setItem(LAST_DATE_KEY, today);
-
-      return out;
-    }
-
-    async function refresh(){
-      $("diag").textContent = "Refreshing…";
-      try{
-        const url = buildArcgisUrl();
-        const res = await fetch(url);
-        const data = await res.json();
-
-        const feats = data.features || [];
-        const all = feats.map(f => f.attributes || {});
-        latest = all;
-
-        const excludeTraffic = $("excludeTraffic").checked;
-
-        const parkingCases = all
-          .filter(a => isParkingish(a.CaseType))
-          .filter(a => !(excludeTraffic && isTrafficSpam(a.CaseType)))
-          .map(a => ({
-            id: makeCaseId(a),
-            type: a.CaseType || "Parking-ish",
-            status: normStatus(a),
-            address: a.IncidentAddress || "",
-          }));
-
-        const digestText = buildDailyDigest(parkingCases);
-        $("digestBox").innerHTML = formatDigestHTML(digestText);
-        $("digestStamp").textContent = `Last run: ${new Date().toLocaleString()}`;
-
-        $("radiusMini").textContent = `Radius: ${radiusMiles.toFixed(2)} mi`;
-
-        const sampleTypes = all.slice(0,6).map(a => a.CaseType).filter(Boolean).join(" | ");
-        $("diag").innerHTML =
-          `ArcGIS returned <b>${feats.length}</b> in bbox around HQ.<br>` +
-          `HQ: ${HOME.lat.toFixed(5)}, ${HOME.lon.toFixed(5)} · Sample: ${sampleTypes || "(none)"}`;
-
-        render();
-      }catch(e){
-        console.error(e);
-        $("diag").textContent = "API error. Open DevTools Console for details.";
-      }
-    }
-
-    function find(){
-      const q = $("search").value.trim().toLowerCase();
-      if(!q) return;
-
-      const hit = latest.find(a => (
-        String(a.CaseNumber365||"").toLowerCase().includes(q) ||
-        String(a.CaseNumber||"").toLowerCase().includes(q) ||
-        String(a.IncidentAddress||"").toLowerCase().includes(q) ||
-        String(a.CaseType||"").toLowerCase().includes(q)
-      ));
-
-      if(!hit){
-        alert("Not found in the current bbox results.");
-        return;
-      }
-
-      const lat = Number(hit.Latitude), lon = Number(hit.Longitude);
-      map.setView([lat, lon], 17);
-
-      // Open popup by matching marker id
-      const id = makeCaseId(hit);
-      const m = markers.get(id);
-      if (m) m.openPopup();
-    }
-
-    // ===== UI wiring =====
-    $("radiusLabel").textContent = radiusMiles.toFixed(2);
-    $("radiusMini").textContent = `Radius: ${radiusMiles.toFixed(2)} mi`;
-
-    $("radius").addEventListener("input", async (e) => {
-      radiusMiles = Number(e.target.value);
-      $("radiusLabel").textContent = radiusMiles.toFixed(2);
-      $("radiusMini").textContent = `Radius: ${radiusMiles.toFixed(2)} mi`;
-      radiusCircle.setRadius(radiusMiles * 1609.34);
-      await refresh();
-    });
-
-    $("refreshBtn").addEventListener("click", refresh);
-    $("recenterBtn").addEventListener("click", () => {
-      map.setView([HOME.lat, HOME.lon], 16);
-      hqMarker.setLatLng([HOME.lat, HOME.lon]);
-      radiusCircle.setLatLng([HOME.lat, HOME.lon]);
-    });
-    $("clearBtn").addEventListener("click", () => {
-      clearPins();
-      $("diag").textContent = "Cleared pins. Hit Refresh.";
-    });
-
-    $("parkingOnly").addEventListener("change", render);
-    $("excludeTraffic").addEventListener("change", async () => {
-      render();
-      await refresh(); // digest depends on this
-    });
-
-    $("findBtn").addEventListener("click", find);
-    $("search").addEventListener("keydown", (e) => { if(e.key==="Enter") find(); });
-
-    // init
-    updateChaos();
-    refresh();
-  </script>
-</body>
-</html>
+    function buildURL(){
+      const latPad = RADIUS_MI / 69;
+      const lonPad = RADIUS_MI / (69 * Math.cos(HOME.lat * Math.PI/180));
+      return `https://mycity2.houstontx.gov/pubgis01/rest/services/311/Houston311_RecentServiceRequests/FeatureServer/3/query` +
+        `?where=Latitude BETWEEN ${HOME.lat-latPad} AND ${HOME.lat+latPad}` +
+        ` AND Longitude BETWEEN ${HOME.lon-lonPad} AND ${HOME.lon+lonPad}` +
+        `&out
