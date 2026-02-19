@@ -56,7 +56,7 @@
 <body>
 
 <div id="controls">
-  <strong>311 Chaos Filters</strong>
+  <strong>Hyper-Local Chaos</strong>
   <label><input type="checkbox" value="parking" checked> 🚗 Parking Drama</label>
   <label><input type="checkbox" value="trash" checked> 🗑 Trash Crimes</label>
   <label><input type="checkbox" value="noise" checked> 🔊 Noise Meltdowns</label>
@@ -69,19 +69,45 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-  console.log("Script loaded");
+  console.log("Karen Command Center Booting");
+
+  const HOME = {
+    lat: 29.828103,
+    lon: -95.426829
+  };
+
+  const RADIUS_MILES = 1.0;   // ← Upgraded paranoia radius 😆
 
   const apiURL =
-    "https://mycity2.houstontx.gov/pubgis01/rest/services/311/Houston311_RecentServiceRequests/FeatureServer/3/query?where=1%3D1&outFields=CaseType,Status,Latitude,Longitude,IncidentAddress&resultRecordCount=500&f=json";
+    "https://mycity2.houstontx.gov/pubgis01/rest/services/311/Houston311_RecentServiceRequests/FeatureServer/3/query?where=1%3D1&outFields=CaseType,Status,Latitude,Longitude,IncidentAddress&resultRecordCount=1000&f=json";
 
-  const map = L.map("map").setView([29.7604, -95.3698], 11);
+  const map = L.map("map").setView([HOME.lat, HOME.lon], 14);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "Houston Chaos Engine"
   }).addTo(map);
 
+  L.marker([HOME.lat, HOME.lon])
+    .addTo(map)
+    .bindPopup("🏠 Karen HQ")
+    .openPopup();
+
   let markers = [];
   let cached = [];
+
+  function milesBetween(lat1, lon1, lat2, lon2) {
+    const R = 3958.8;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+
+    const a =
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI/180) *
+      Math.cos(lat2 * Math.PI/180) *
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
 
   function getFilters() {
     return new Set(
@@ -93,9 +119,24 @@
   function matches(caseType, filters) {
     const type = (caseType || "").toLowerCase();
 
-    if (type.includes("parking")) return filters.has("parking");
-    if (type.includes("trash")) return filters.has("trash");
-    if (type.includes("noise")) return filters.has("noise");
+    const parkingMatch =
+      type.includes("parking") ||
+      type.includes("vehicle") ||
+      type.includes("parked");
+
+    const trashMatch =
+      type.includes("trash") ||
+      type.includes("garbage") ||
+      type.includes("debris");
+
+    const noiseMatch =
+      type.includes("noise") ||
+      type.includes("sound") ||
+      type.includes("loud");
+
+    if (parkingMatch) return filters.has("parking");
+    if (trashMatch) return filters.has("trash");
+    if (noiseMatch) return filters.has("noise");
 
     return filters.has("other");
   }
@@ -114,39 +155,10 @@
       const lon = attrs.Longitude;
 
       if (!lat || !lon) return;
+
+      const distance = milesBetween(HOME.lat, HOME.lon, lat, lon);
+
+      if (distance > RADIUS_MILES) return;
       if (!matches(attrs.CaseType, filters)) return;
 
-      const marker = L.circleMarker([lat, lon], { radius: 6 })
-        .addTo(map)
-        .bindPopup(
-          "<b>" + (attrs.CaseType || "Unknown Chaos") + "</b><br>" +
-          "Status: " + (attrs.Status || "Unknown") + "<br>" +
-          (attrs.IncidentAddress || "")
-        );
-
-      markers.push(marker);
-    });
-
-    console.log("Rendered markers:", markers.length);
-  }
-
-  fetch(apiURL)
-    .then(res => res.json())
-    .then(data => {
-      console.log("API response:", data);
-
-      const features = data.features || [];
-      console.log("API records:", features.length);
-
-      cached = features.map(f => f.attributes || {});
-      render();
-    })
-    .catch(err => console.error("API Error:", err));
-
-  document
-    .querySelectorAll("#controls input")
-    .forEach(cb => cb.addEventListener("change", render));
-</script>
-
-</body>
-</html>
+      const marker = L.circleMarker([lat, lon], { radius: 7 })
