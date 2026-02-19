@@ -11,18 +11,6 @@
     html, body { height: 100%; margin: 0; font-family: sans-serif; }
     #map { height: 100%; width: 100%; }
 
-    #controls {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      background: white;
-      padding: 12px 14px;
-      border-radius: 14px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-      z-index: 1000;
-      font-size: 14px;
-    }
-
     #title {
       position: absolute;
       bottom: 15px;
@@ -39,49 +27,42 @@
 
 <body>
 
-<div id="controls">
-  <strong>Active Karen Alerts</strong>
-  <div>Radius: 1 mile</div>
-</div>
-
 <div id="title">Houston Karen Command Center</div>
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-console.log("LOCKED-IN BUILD");
+console.log("PRECISION BUILD");
 
-const HOME = { lat: 29.828103, lon: -95.426829 };
+const HOME_LAT = 29.828103;
+const HOME_LON = -95.426829;
 const RADIUS_MILES = 1.0;
 
-/* 🔥 ONLY ACTIVE + EXCLUDE TRAFFIC SPAM */
 const apiURL =
   "https://mycity2.houstontx.gov/pubgis01/rest/services/311/Houston311_RecentServiceRequests/FeatureServer/3/query?" +
   "where=StateCodeName='Active' AND NOT CaseType LIKE '%Traffic%'" +
   "&outFields=CaseType,Status,Latitude,Longitude,IncidentAddress,CaseNumber" +
   "&resultRecordCount=2000&f=json";
 
-const map = L.map("map", { zoomControl: true })
-             .setView([HOME.lat, HOME.lon], 15);
+const map = L.map("map").setView([HOME_LAT, HOME_LON], 16);
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png")
   .addTo(map);
 
-/* 🏠 HARD LOCK CENTER */
-L.marker([HOME.lat, HOME.lon])
+/* 🏠 EXACT HQ */
+L.marker([HOME_LAT, HOME_LON])
   .addTo(map)
-  .bindPopup("🏠 Karen HQ")
+  .bindPopup("🏠 Karen HQ (Exact)")
   .openPopup();
 
-/* 🔵 Visual Radius */
-L.circle([HOME.lat, HOME.lon], {
+/* 🔵 Radius */
+L.circle([HOME_LAT, HOME_LON], {
   radius: RADIUS_MILES * 1609.34,
-  fillOpacity: 0.05
+  fillOpacity: 0.04
 }).addTo(map);
 
-let markers = {};
-let knownCases = new Set();
+let known = new Set();
 
 function milesBetween(lat1, lon1, lat2, lon2) {
   const R = 3958.8;
@@ -97,29 +78,44 @@ function milesBetween(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-function addMarker(attrs, distance) {
-  const id = attrs.CaseNumber || Math.random();
-
-  const marker = L.circleMarker(
-    [attrs.Latitude, attrs.Longitude],
-    { radius: 8 }
-  )
-  .addTo(map)
-  .bindPopup(
-    "<b>" + attrs.CaseType + "</b><br>" +
-    "Status: " + attrs.Status + "<br>" +
-    "Distance: " + distance.toFixed(2) + " mi<br>" +
-    attrs.IncidentAddress
+function validCoord(lat, lon) {
+  return (
+    lat && lon &&
+    lat > 29 && lat < 31 &&
+    lon < -94 && lon > -96
   );
+}
 
-  /* 🔥 NEW CASE ANIMATION */
+function plot(attrs) {
+  const lat = Number(attrs.Latitude);
+  const lon = Number(attrs.Longitude);
+
+  if (!validCoord(lat, lon)) {
+    console.log("Bad coord skipped:", attrs.CaseNumber);
+    return;
+  }
+
+  const distance = milesBetween(HOME_LAT, HOME_LON, lat, lon);
+
+  if (distance > RADIUS_MILES) return;
+
+  const id = attrs.CaseNumber;
+  if (known.has(id)) return;
+
+  known.add(id);
+
+  const marker = L.circleMarker([lat, lon], { radius: 8 })
+    .addTo(map)
+    .bindPopup(
+      "<b>" + attrs.CaseType + "</b><br>" +
+      "Status: " + attrs.Status + "<br>" +
+      "Distance: " + distance.toFixed(2) + " mi<br>" +
+      attrs.IncidentAddress
+    );
+
+  /* ✨ subtle animation */
   marker.setStyle({ opacity: 0, fillOpacity: 0 });
-
-  setTimeout(() => {
-    marker.setStyle({ opacity: 1, fillOpacity: 0.7 });
-  }, 50);
-
-  markers[id] = marker;
+  setTimeout(() => marker.setStyle({ opacity: 1, fillOpacity: 0.7 }), 60);
 }
 
 function refresh() {
@@ -127,32 +123,24 @@ function refresh() {
     .then(r => r.json())
     .then(data => {
       const features = data.features || [];
-      console.log("Active records:", features.length);
+      console.log("Records:", features.length);
 
       features.forEach(f => {
         const attrs = f.attributes;
-        if (!attrs || !attrs.Latitude || !attrs.Longitude) return;
+        if (!attrs) return;
 
-        const distance = milesBetween(
-          HOME.lat, HOME.lon,
-          attrs.Latitude, attrs.Longitude
-        );
+        /* 🔥 DEBUG your specific case */
+        if (attrs.IncidentAddress &&
+            attrs.IncidentAddress.includes("1062")) {
+          console.log("FOUND YOUR ADDRESS:", attrs);
+        }
 
-        if (distance > RADIUS_MILES) return;
-
-        const id = attrs.CaseNumber;
-        if (knownCases.has(id)) return;
-
-        knownCases.add(id);
-        addMarker(attrs, distance);
+        plot(attrs);
       });
     });
 }
 
-/* Initial load */
 refresh();
-
-/* 🔁 Auto-refresh every 30 sec */
 setInterval(refresh, 30000);
 </script>
 
