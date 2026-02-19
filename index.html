@@ -18,95 +18,98 @@
       --radius: 18px;
     }
 
-    html, body {
-      height: 100%;
-      margin: 0;
-      background: var(--paper);
-      color: var(--ink);
-      font-family: "Playfair Display", Georgia, serif;
-    }
-
-    body{
-      display: flex;
-      justify-content: center;
-    }
+    html, body { height: 100%; margin: 0; background: var(--paper); color: var(--ink); }
+    body { display:flex; justify-content:center; }
 
     .page{
       width: min(1100px, 100%);
       padding: 28px 20px 40px;
       box-sizing: border-box;
+      font-family: Georgia, "Times New Roman", serif;
     }
 
-    /* TITLE */
-    .masthead{
-      text-align: center;
-      margin-bottom: 26px;
-    }
-
+    .masthead{ text-align:center; margin-bottom: 18px; }
     .masthead h1{
-      font-size: 44px;
       margin: 0;
-      letter-spacing: 0.5px;
+      font-size: 48px;
+      letter-spacing: 0.4px;
+      font-family: "Georgia", serif;
     }
-
     .masthead p{
-      margin: 8px 0 0;
+      margin: 10px 0 0;
       font-size: 15px;
       color: var(--muted);
       font-style: italic;
     }
 
     .rule{
-      margin: 22px 0;
+      margin: 18px 0 18px;
       height: 1px;
       background: linear-gradient(90deg, transparent, var(--line), transparent);
     }
 
-    /* CHAOS */
     .chaos{
       background: var(--soft);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       padding: 16px 18px;
       text-align: center;
-      margin-bottom: 18px;
+      margin-bottom: 14px;
     }
-
     .chaos strong{
-      font-size: 13px;
+      font-size: 12px;
       letter-spacing: 1px;
       text-transform: uppercase;
       color: var(--muted);
+      display:block;
     }
-
     .chaos .count{
-      font-size: 40px;
-      margin-top: 6px;
+      font-size: 44px;
+      margin-top: 8px;
       color: var(--accent);
+      font-weight: 700;
+      line-height: 1;
     }
-
     .chaos .label{
-      margin-top: 4px;
+      margin-top: 6px;
       font-size: 14px;
       color: var(--muted);
     }
 
-    /* MAP */
-    #map{
-      height: 360px;
-      border-radius: var(--radius);
+    /* Map card */
+    .mapCard{
+      background:#fff;
       border: 1px solid var(--line);
-      margin-bottom: 18px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .mapTop{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      background: #fffdf8;
+      color: var(--muted);
+      font-size: 13px;
     }
 
-    /* CONTROLS */
+    #map{
+      height: 320px;
+      width: 100%;
+    }
+
     .controls{
-      display: flex;
+      display:flex;
       gap: 10px;
       flex-wrap: wrap;
-      margin-bottom: 18px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--line);
+      background: #fff;
+      align-items: center;
     }
-
     .controls button,
     .controls input{
       font-family: inherit;
@@ -115,39 +118,46 @@
       border: 1px solid var(--line);
       background: #fff;
     }
-
     .controls label{
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
       font-size: 13px;
       color: var(--muted);
+      user-select:none;
     }
+    .controls input[type="range"]{ width: 160px; }
 
-    /* DIGEST */
     .digest{
       background: #fff;
       border: 1px solid var(--line);
       border-radius: var(--radius);
-      padding: 18px 20px;
+      padding: 16px 18px;
     }
-
     .digest h2{
-      margin: 0 0 12px;
+      margin: 0 0 10px;
       font-size: 22px;
+      display:flex;
+      gap:10px;
+      align-items:center;
     }
-
+    .digest h2 .stamp{
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: normal;
+    }
     .digest pre{
       white-space: pre-wrap;
-      font-family: "Georgia", serif;
+      font-family: Georgia, "Times New Roman", serif;
       font-size: 14px;
-      line-height: 1.55;
+      line-height: 1.6;
       margin: 0;
+      color: #2a2622;
     }
 
     a.caseLink{
       color: var(--accent);
-      font-weight: 600;
+      font-weight: 700;
       text-decoration: underline;
     }
 
@@ -169,53 +179,277 @@
 
     <div class="chaos">
       <strong>Current State of Affairs</strong>
-      <div class="count" id="chaosCount">0</div>
-      <div class="label" id="chaosLabel">All is calm</div>
+      <div class="count" id="chaosCount">—</div>
+      <div class="label" id="chaosLabel">Awaiting intelligence…</div>
     </div>
 
-    <div id="map"></div>
+    <div class="mapCard">
+      <div class="mapTop">
+        <span>🗺️ The Situation Map</span>
+        <span id="mapNote">Drag HQ if you must.</span>
+      </div>
 
-    <div class="controls">
-      <button id="refreshBtn">Refresh intelligence</button>
-      <label><input type="checkbox" id="parkingOnly" checked> Parking only</label>
-      <label><input type="checkbox" id="excludeTraffic" checked> Exclude traffic</label>
+      <div id="map"></div>
+
+      <div class="controls">
+        <button id="refreshBtn">Refresh intelligence</button>
+
+        <label><input type="checkbox" id="parkingOnly" checked> Parking only</label>
+        <label><input type="checkbox" id="excludeTraffic" checked> Exclude traffic</label>
+
+        <label>
+          Radius
+          <input id="radius" type="range" min="0.25" max="2.0" step="0.25" value="1.0" />
+          <span id="radiusLabel">1.00</span> mi
+        </label>
+      </div>
     </div>
 
     <div class="digest">
-      <h2>📰 The Daily Dispatch</h2>
+      <h2>📰 The Daily Dispatch <span class="stamp" id="stamp">—</span></h2>
       <pre id="digestBox">Gathering whispers…</pre>
     </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <script>
-    const HOME = { lat: 29.828103, lon: -95.426829 };
-    const RADIUS_MI = 1.0;
-    const $ = id => document.getElementById(id);
+    document.addEventListener("DOMContentLoaded", () => {
+      // ===== SETTINGS =====
+      const DEFAULT_HOME = { lat: 29.828103, lon: -95.426829 };
+      const $ = (id) => document.getElementById(id);
 
-    function isTraffic(t){
-      return (t||"").toLowerCase().includes("traffic");
-    }
-    function isParking(t){
-      return (t||"").toLowerCase().match(/park|vehicle|tow|driveway|abandoned/);
-    }
+      // Persist HQ so it won’t “wander”
+      function loadHome(){
+        const raw = localStorage.getItem("whistledown_hq_v1");
+        if(!raw) return { ...DEFAULT_HOME };
+        try {
+          const o = JSON.parse(raw);
+          if (Number.isFinite(o.lat) && Number.isFinite(o.lon)) return o;
+        } catch {}
+        return { ...DEFAULT_HOME };
+      }
+      function saveHome(lat, lon){
+        localStorage.setItem("whistledown_hq_v1", JSON.stringify({ lat, lon }));
+      }
 
-    const map = L.map("map").setView([HOME.lat, HOME.lon], 16);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+      let HOME = loadHome();
+      let radiusMiles = Number($("radius").value || 1.0);
 
-    L.marker([HOME.lat, HOME.lon]).addTo(map).bindPopup("Your residence");
+      // ===== HELPERS =====
+      const trafficRe = /traffic|signal|sign|street\s*light|streetlight/i;
+      const parkingRe = /park|parking|vehicle|tow|driveway|abandoned|obstruction|illegally\s*park/i;
 
-    let markers = [];
+      function isTraffic(type){ return trafficRe.test(type || ""); }
+      function isParking(type){ return parkingRe.test(type || ""); }
 
-    function clearPins(){
-      markers.forEach(m => map.removeLayer(m));
-      markers = [];
-    }
+      function milesToLatDeg(mi){ return mi / 69.0; }
+      function milesToLonDeg(mi, lat){ return mi / (69.0 * Math.cos(lat * Math.PI/180)); }
 
-    function buildURL(){
-      const latPad = RADIUS_MI / 69;
-      const lonPad = RADIUS_MI / (69 * Math.cos(HOME.lat * Math.PI/180));
-      return `https://mycity2.houstontx.gov/pubgis01/rest/services/311/Houston311_RecentServiceRequests/FeatureServer/3/query` +
-        `?where=Latitude BETWEEN ${HOME.lat-latPad} AND ${HOME.lat+latPad}` +
-        ` AND Longitude BETWEEN ${HOME.lon-lonPad} AND ${HOME.lon+lonPad}` +
-        `&out
+      function makeCaseId(a){
+        return String(a.CaseNumber365 || a.CaseNumber || a.ObjectID || (a.IncidentAddress||"") + "::" + (a.CreatedDate||""));
+      }
+
+      // Houston portal NOTE: it does NOT reliably accept query params to pre-fill case/address.
+      // So we link to the status page + show the case number in the popup for copy/paste.
+      const CASE_STATUS_URL = "https://houston311.powerappsportals.us/en-US/checkcasestatus/";
+
+      function buildArcgisUrl(){
+        const latPad = milesToLatDeg(radiusMiles) * 1.25;
+        const lonPad = milesToLonDeg(radiusMiles, HOME.lat) * 1.25;
+
+        const minLat = (HOME.lat - latPad).toFixed(6);
+        const maxLat = (HOME.lat + latPad).toFixed(6);
+        const minLon = (HOME.lon - lonPad).toFixed(6);
+        const maxLon = (HOME.lon + lonPad).toFixed(6);
+
+        const where =
+          `Latitude >= ${minLat} AND Latitude <= ${maxLat} AND Longitude >= ${minLon} AND Longitude <= ${maxLon}`;
+
+        const params = new URLSearchParams({
+          where,
+          outFields: "CaseType,StateCodeName,Status,IncidentAddress,Latitude,Longitude,CaseNumber365,CaseNumber,CreatedDate,ClosedDate",
+          resultRecordCount: "2000",
+          f: "json"
+        });
+
+        return "https://mycity2.houstontx.gov/pubgis01/rest/services/311/Houston311_RecentServiceRequests/FeatureServer/3/query?" + params.toString();
+      }
+
+      function setChaos(n){
+        $("chaosCount").textContent = String(n);
+        $("chaosLabel").textContent =
+          n === 0 ? "A blessed silence." :
+          n < 3 ? "A murmur among the hedges." :
+          n < 7 ? "Raised eyebrows at the garden party." :
+          n < 12 ? "Whispers become a scandal." :
+          "Society is in shambles.";
+      }
+
+      function setDigest(text){
+        $("digestBox").textContent = text;
+        $("stamp").textContent = "Last run: " + new Date().toLocaleString();
+      }
+
+      // ===== MAP INIT (this was the part that was breaking) =====
+      const map = L.map("map", { zoomControl: true }).setView([HOME.lat, HOME.lon], 16);
+
+      // Force a size calc after layout paints (prevents blank map in some cases)
+      setTimeout(() => map.invalidateSize(), 50);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "© OpenStreetMap contributors"
+      }).addTo(map);
+
+      const hqMarker = L.marker([HOME.lat, HOME.lon], { draggable: true })
+        .addTo(map)
+        .bindPopup("🏠 HQ — drag to the exact roof, darling.")
+        .openPopup();
+
+      const radiusCircle = L.circle([HOME.lat, HOME.lon], {
+        radius: radiusMiles * 1609.34,
+        color: "#b48a3c",
+        weight: 2,
+        fillOpacity: 0.06
+      }).addTo(map);
+
+      hqMarker.on("dragend", async () => {
+        const ll = hqMarker.getLatLng();
+        HOME = { lat: ll.lat, lon: ll.lng };
+        saveHome(HOME.lat, HOME.lon);
+        radiusCircle.setLatLng([HOME.lat, HOME.lon]);
+        await refresh();
+      });
+
+      let markers = new Map();
+
+      function clearPins(){
+        for (const m of markers.values()) map.removeLayer(m);
+        markers.clear();
+      }
+
+      function addSirenMarker(a){
+        const lat = Number(a.Latitude);
+        const lon = Number(a.Longitude);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+        const id = makeCaseId(a);
+        if (markers.has(id)) return;
+
+        const icon = L.divIcon({
+          className: "",
+          html: `<div style="
+            width: 26px; height: 26px; display:grid; place-items:center;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.95);
+            border: 1px solid rgba(0,0,0,0.12);
+            box-shadow: 0 8px 22px rgba(0,0,0,0.12);
+            font-size: 16px;
+          ">🚨</div>`,
+          iconSize: [26, 26],
+          iconAnchor: [13, 13]
+        });
+
+        const m = L.marker([lat, lon], { icon }).addTo(map);
+
+        const type = a.CaseType || "311";
+        const status = a.StateCodeName || a.Status || "Unknown";
+        const address = a.IncidentAddress || "—";
+        const caseNum = a.CaseNumber365 || a.CaseNumber || "—";
+
+        m.bindPopup(`
+          <div style="font-family:Georgia,serif; line-height:1.45;">
+            <div style="font-size:16px; font-weight:700;">${type}</div>
+            <div style="color:#6f6a64;">${address}</div>
+            <div style="margin-top:6px;">Status: <b>${status}</b></div>
+            <div style="margin-top:6px;">Case #: <b>${caseNum}</b></div>
+            <div style="margin-top:8px;">
+              <a class="caseLink" href="${CASE_STATUS_URL}" target="_blank" rel="noopener noreferrer">
+                Open Houston 311 case status
+              </a>
+            </div>
+            <div style="margin-top:6px; color:#6f6a64; font-size:12px;">
+              (Houston’s site doesn’t reliably accept pre-filled links—copy/paste the case # above.)
+            </div>
+          </div>
+        `);
+
+        markers.set(id, m);
+      }
+
+      async function refresh(){
+        $("radiusLabel").textContent = radiusMiles.toFixed(2);
+        radiusCircle.setRadius(radiusMiles * 1609.34);
+
+        setDigest("Gathering whispers…");
+
+        try {
+          clearPins();
+
+          const url = buildArcgisUrl();
+          const res = await fetch(url);
+          const data = await res.json();
+
+          const feats = (data.features || []).map(f => f.attributes || {});
+          const parkingOnly = $("parkingOnly").checked;
+          const excludeTraffic = $("excludeTraffic").checked;
+
+          const lines = [];
+          let shown = 0;
+
+          for (const a of feats) {
+            const type = a.CaseType || "";
+
+            if (excludeTraffic && isTraffic(type)) continue;
+            if (parkingOnly && !isParking(type)) continue;
+
+            shown++;
+            addSirenMarker(a);
+
+            const caseNum = a.CaseNumber365 || a.CaseNumber || "—";
+            lines.push(`• ${a.CaseType || "311"} — ${a.IncidentAddress || "—"} (Case ${caseNum})`);
+          }
+
+          setChaos(shown);
+
+          if (shown === 0) {
+            setDigest("It appears the curbside remains unremarkable today.\n\n(If you expected results, try unchecking “Parking only” or increasing the radius.)");
+          } else {
+            setDigest(lines.join("\n"));
+          }
+
+          // Recenter gently to HQ if map was blank before
+          map.setView([HOME.lat, HOME.lon], map.getZoom());
+
+        } catch (err) {
+          console.error(err);
+          setChaos(0);
+          setDigest(
+            "The messenger has fainted.\n\n" +
+            "What I know:\n" +
+            "- The map should still render even if the data fails.\n" +
+            "- If this message appears, a request or script crashed.\n\n" +
+            "Error:\n" + String(err)
+          );
+        }
+      }
+
+      // ===== UI wiring =====
+      $("radiusLabel").textContent = radiusMiles.toFixed(2);
+      $("radius").addEventListener("input", async (e) => {
+        radiusMiles = Number(e.target.value);
+        await refresh();
+      });
+
+      $("refreshBtn").addEventListener("click", refresh);
+      $("parkingOnly").addEventListener("change", refresh);
+      $("excludeTraffic").addEventListener("change", refresh);
+
+      // First run
+      refresh();
+    });
+  </script>
+</body>
+</html>
+
