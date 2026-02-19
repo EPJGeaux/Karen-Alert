@@ -4,22 +4,12 @@
   <meta charset="utf-8" />
   <title>Houston Karen Command Center</title>
 
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      font-family: sans-serif;
-    }
-
-    #map {
-      height: 100%;
-      width: 100%;
-    }
+    html, body { height: 100%; margin: 0; font-family: sans-serif; }
+    #map { height: 100%; width: 100%; }
 
     #controls {
       position: absolute;
@@ -30,13 +20,7 @@
       border-radius: 14px;
       box-shadow: 0 6px 18px rgba(0,0,0,0.25);
       z-index: 1000;
-      line-height: 1.6;
       font-size: 14px;
-    }
-
-    #controls label {
-      display: block;
-      cursor: pointer;
     }
 
     #title {
@@ -56,11 +40,8 @@
 <body>
 
 <div id="controls">
-  <strong>Hyper-Local Chaos</strong>
-  <label><input type="checkbox" value="parking" checked> 🚗 Parking Drama</label>
-  <label><input type="checkbox" value="trash" checked> 🗑 Trash Crimes</label>
-  <label><input type="checkbox" value="noise" checked> 🔊 Noise Meltdowns</label>
-  <label><input type="checkbox" value="other" checked> 🌪 Other Chaos</label>
+  <strong>Active Karen Alerts</strong>
+  <div>Radius: 1 mile</div>
 </div>
 
 <div id="title">Houston Karen Command Center</div>
@@ -69,96 +50,111 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-  console.log("Karen Command Center Booting");
+console.log("LOCKED-IN BUILD");
 
-  const HOME = {
-    lat: 29.828103,
-    lon: -95.426829
-  };
+const HOME = { lat: 29.828103, lon: -95.426829 };
+const RADIUS_MILES = 1.0;
 
-  const RADIUS_MILES = 1.0;   // ← Upgraded paranoia radius 😆
+/* 🔥 ONLY ACTIVE + EXCLUDE TRAFFIC SPAM */
+const apiURL =
+  "https://mycity2.houstontx.gov/pubgis01/rest/services/311/Houston311_RecentServiceRequests/FeatureServer/3/query?" +
+  "where=StateCodeName='Active' AND NOT CaseType LIKE '%Traffic%'" +
+  "&outFields=CaseType,Status,Latitude,Longitude,IncidentAddress,CaseNumber" +
+  "&resultRecordCount=2000&f=json";
 
-  const apiURL =
-    "https://mycity2.houstontx.gov/pubgis01/rest/services/311/Houston311_RecentServiceRequests/FeatureServer/3/query?where=1%3D1&outFields=CaseType,Status,Latitude,Longitude,IncidentAddress&resultRecordCount=1000&f=json";
+const map = L.map("map", { zoomControl: true })
+             .setView([HOME.lat, HOME.lon], 15);
 
-  const map = L.map("map").setView([HOME.lat, HOME.lon], 14);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png")
+  .addTo(map);
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "Houston Chaos Engine"
-  }).addTo(map);
+/* 🏠 HARD LOCK CENTER */
+L.marker([HOME.lat, HOME.lon])
+  .addTo(map)
+  .bindPopup("🏠 Karen HQ")
+  .openPopup();
 
-  L.marker([HOME.lat, HOME.lon])
-    .addTo(map)
-    .bindPopup("🏠 Karen HQ")
-    .openPopup();
+/* 🔵 Visual Radius */
+L.circle([HOME.lat, HOME.lon], {
+  radius: RADIUS_MILES * 1609.34,
+  fillOpacity: 0.05
+}).addTo(map);
 
-  let markers = [];
-  let cached = [];
+let markers = {};
+let knownCases = new Set();
 
-  function milesBetween(lat1, lon1, lat2, lon2) {
-    const R = 3958.8;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
+function milesBetween(lat1, lon1, lat2, lon2) {
+  const R = 3958.8;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
 
-    const a =
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI/180) *
-      Math.cos(lat2 * Math.PI/180) *
-      Math.sin(dLon/2) * Math.sin(dLon/2);
+  const a =
+    Math.sin(dLat/2)**2 +
+    Math.cos(lat1*Math.PI/180) *
+    Math.cos(lat2*Math.PI/180) *
+    Math.sin(dLon/2)**2;
 
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  }
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
 
-  function getFilters() {
-    return new Set(
-      [...document.querySelectorAll("#controls input:checked")]
-        .map(cb => cb.value)
-    );
-  }
+function addMarker(attrs, distance) {
+  const id = attrs.CaseNumber || Math.random();
 
-  function matches(caseType, filters) {
-    const type = (caseType || "").toLowerCase();
+  const marker = L.circleMarker(
+    [attrs.Latitude, attrs.Longitude],
+    { radius: 8 }
+  )
+  .addTo(map)
+  .bindPopup(
+    "<b>" + attrs.CaseType + "</b><br>" +
+    "Status: " + attrs.Status + "<br>" +
+    "Distance: " + distance.toFixed(2) + " mi<br>" +
+    attrs.IncidentAddress
+  );
 
-    const parkingMatch =
-      type.includes("parking") ||
-      type.includes("vehicle") ||
-      type.includes("parked");
+  /* 🔥 NEW CASE ANIMATION */
+  marker.setStyle({ opacity: 0, fillOpacity: 0 });
 
-    const trashMatch =
-      type.includes("trash") ||
-      type.includes("garbage") ||
-      type.includes("debris");
+  setTimeout(() => {
+    marker.setStyle({ opacity: 1, fillOpacity: 0.7 });
+  }, 50);
 
-    const noiseMatch =
-      type.includes("noise") ||
-      type.includes("sound") ||
-      type.includes("loud");
+  markers[id] = marker;
+}
 
-    if (parkingMatch) return filters.has("parking");
-    if (trashMatch) return filters.has("trash");
-    if (noiseMatch) return filters.has("noise");
+function refresh() {
+  fetch(apiURL)
+    .then(r => r.json())
+    .then(data => {
+      const features = data.features || [];
+      console.log("Active records:", features.length);
 
-    return filters.has("other");
-  }
+      features.forEach(f => {
+        const attrs = f.attributes;
+        if (!attrs || !attrs.Latitude || !attrs.Longitude) return;
 
-  function clearMarkers() {
-    markers.forEach(m => map.removeLayer(m));
-    markers = [];
-  }
+        const distance = milesBetween(
+          HOME.lat, HOME.lon,
+          attrs.Latitude, attrs.Longitude
+        );
 
-  function render() {
-    clearMarkers();
-    const filters = getFilters();
+        if (distance > RADIUS_MILES) return;
 
-    cached.forEach(attrs => {
-      const lat = attrs.Latitude;
-      const lon = attrs.Longitude;
+        const id = attrs.CaseNumber;
+        if (knownCases.has(id)) return;
 
-      if (!lat || !lon) return;
+        knownCases.add(id);
+        addMarker(attrs, distance);
+      });
+    });
+}
 
-      const distance = milesBetween(HOME.lat, HOME.lon, lat, lon);
+/* Initial load */
+refresh();
 
-      if (distance > RADIUS_MILES) return;
-      if (!matches(attrs.CaseType, filters)) return;
+/* 🔁 Auto-refresh every 30 sec */
+setInterval(refresh, 30000);
+</script>
 
-      const marker = L.circleMarker([lat, lon], { radius: 7 })
+</body>
+</html>
