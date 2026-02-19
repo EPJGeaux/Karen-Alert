@@ -1,101 +1,150 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Karen Parking Radar 🚨</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <title>Houston Karen Command Center</title>
+  <meta charset="utf-8" />
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
   <style>
-    body { margin:0; font-family:sans-serif; }
-    #map { height: 50vh; }
-    #dashboard { padding:10px; text-align:center; background:#fff; }
-    #threat {
-      font-size: 1.5em;
-      font-weight: bold;
-      color: red;
-      display: inline-block;
-      transition: transform 0.3s ease, color 0.3s ease;
+    body {
+      margin: 0;
+      font-family: sans-serif;
     }
-    .pulse {
-      transform: scale(1.5);
-      color: darkred;
+
+    #map {
+      height: 100vh;
+      width: 100vw;
+    }
+
+    #controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: white;
+      padding: 10px 12px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 1000;
+    }
+
+    #controls label {
+      display: block;
+      cursor: pointer;
+      font-size: 14px;
+      user-select: none;
+    }
+
+    #title {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-size: 13px;
+      z-index: 1000;
     }
   </style>
 </head>
+
 <body>
-  <div id="dashboard">
-    Monitoring <b>ZIP 77018</b> for parking complaints…<br>
-    Karen Threat Level: <span id="threat">0</span> ⚠️
-  </div>
-  <div id="map"></div>
 
-  <script>
-    const map = L.map('map').setView([29.8078, -95.4250], 14);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+<div id="controls">
+  <strong>311 Chaos Filters</strong>
+  <label><input type="checkbox" value="parking" checked> 🚗 Parking Drama</label>
+  <label><input type="checkbox" value="trash" checked> 🗑 Trash Crimes</label>
+  <label><input type="checkbox" value="noise" checked> 🔊 Noise Meltdowns</label>
+  <label><input type="checkbox" value="other" checked> 🌪 Other Chaos</label>
+</div>
 
-    const apiURL = "https://data.houstontx.gov/resource/7x3i-zuj1.json?$limit=1000";
+<div id="title">Houston Karen Command Center</div>
 
-    let seen = new Set(JSON.parse(localStorage.getItem('seenComplaints') || '[]'));
-    let threatLevel = seen.size;
-    const threatSpan = document.getElementById('threat');
-    threatSpan.textContent = threatLevel;
+<div id="map"></div>
 
-    const sarcasticComments = [
-      "Someone’s really committed to their civic duty…",
-      "Oh look, a new neighbor report!",
-      "Brace yourself, the HOA might call…",
-      "Drama levels rising!",
-      "Someone woke up with a parking complaint today."
-    ];
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    function animateThreat() {
-      threatSpan.classList.add('pulse');
-      setTimeout(() => threatSpan.classList.remove('pulse'), 500);
-    }
+<script>
+  const apiURL =
+    "https://mycity.houstontx.gov/arcgis/rest/services/311/Houston311_RecentServiceRequests/FeatureServer/3/query?where=1%3D1&outFields=CaseType,Status,Latitude,Longitude,IncidentAddress&resultRecordCount=500&f=json";
 
-    function updateRadar() {
-      fetch(apiURL)
-        .then(res => res.json())
-        .then(data => {
-          // Filter for ZIP 77018 and parking only
-          const zipParking = data.filter(f =>
-            f.zip && f.zip === "77018" &&
-            f.sr_type && f.sr_type.toLowerCase().includes("parking")
-          );
+  const map = L.map("map").setView([29.7604, -95.3698], 11);
 
-          zipParking.forEach(f => {
-            const id = f.service_request_id || f.sr_number || f.created_date;
-            if (!seen.has(id)) {
-              seen.add(id);
-              localStorage.setItem('seenComplaints', JSON.stringify([...seen]));
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "¯\\_(ツ)_/¯"
+  }).addTo(map);
 
-              threatLevel++;
-              threatSpan.textContent = threatLevel;
-              animateThreat();
+  let allMarkers = [];
+  let cachedFeatures = [];
 
-              const lat = parseFloat(f.latitude) || 29.8078;
-              const lon = parseFloat(f.longitude) || -95.4250;
+  function matchesFilter(caseType, activeFilters) {
+    const type = (caseType || "").toLowerCase();
 
-              const comment = sarcasticComments[Math.floor(Math.random() * sarcasticComments.length)];
+    if (type.includes("parking")) return activeFilters.has("parking");
+    if (type.includes("trash")) return activeFilters.has("trash");
+    if (type.includes("noise")) return activeFilters.has("noise");
 
-              L.circleMarker([lat, lon], {radius:8, color:'red', fillOpacity:0.7})
-                .addTo(map)
-                .bindPopup(`<b>🚨 ${f.sr_type} 🚨</b><br>Status: ${f.status || "Unknown"}<br>Reported: ${f.created_date || ""}<br><i>${comment}</i>`);
+    return activeFilters.has("other");
+  }
 
-              console.log("New parking complaint in 77018:", f.address, f.sr_type, f.created_date);
-              alert("🚨 KAREN ALERT! New parking complaint detected! 🚨");
-            }
-          });
-        })
-        .catch(err => console.error("API Error:", err));
-    }
+  function getActiveFilters() {
+    return new Set(
+      [...document.querySelectorAll("#controls input:checked")]
+        .map(cb => cb.value)
+    );
+  }
 
-    setInterval(updateRadar, 30000);
-    updateRadar();
-  </script>
+  function clearMarkers() {
+    allMarkers.forEach(m => map.removeLayer(m));
+    allMarkers = [];
+  }
+
+  function renderMarkers(filters) {
+    clearMarkers();
+
+    cachedFeatures.forEach(attrs => {
+      const lat = attrs.Latitude;
+      const lon = attrs.Longitude;
+
+      if (!lat || !lon) return;
+      if (!matchesFilter(attrs.CaseType, filters)) return;
+
+      const marker = L.circleMarker([lat, lon], { radius: 6 })
+        .addTo(map)
+        .bindPopup(`
+          <b>${attrs.CaseType || "Unknown Chaos"}</b><br>
+          Status: ${attrs.Status || "Unknown"}<br>
+          ${attrs.IncidentAddress || ""}
+        `);
+
+      allMarkers.push(marker);
+    });
+  }
+
+  fetch(apiURL)
+    .then(res => res.json())
+    .then(data => {
+      const features = data.features || [];
+
+      console.log("Records:", features.length);
+
+      cachedFeatures = features.map(f => f.attributes || {});
+      renderMarkers(getActiveFilters());
+    })
+    .catch(err => console.error("API Error:", err));
+
+  document
+    .querySelectorAll("#controls input")
+    .forEach(cb =>
+      cb.addEventListener("change", () =>
+        renderMarkers(getActiveFilters())
+      )
+    );
+</script>
+
 </body>
 </html>
-
-
-
