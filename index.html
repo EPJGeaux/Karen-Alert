@@ -3,112 +3,165 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Whispers from the Plaza</title>
+  <title>Whispers from the Curb</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
   <style>
     :root{
       --paper: #fbfaf7;
+      --paper2:#f6f3ee;
       --ink: #1e1b18;
       --muted: #6f6a64;
       --accent: #b48a3c;
+      --accent2:#7a5d2b;
       --line: #e6e2db;
       --soft: #f3f1ec;
       --radius: 18px;
+      --shadow: 0 12px 40px rgba(25, 18, 10, 0.08);
     }
 
     html, body { height: 100%; margin: 0; background: var(--paper); color: var(--ink); }
-    body { display:flex; justify-content:center; }
+    body{
+      display:flex; justify-content:center;
+      /* subtle paper texture */
+      background:
+        radial-gradient(900px 500px at 20% 10%, rgba(180,138,60,0.06), transparent 60%),
+        radial-gradient(900px 500px at 85% 30%, rgba(122,93,43,0.05), transparent 55%),
+        repeating-linear-gradient(0deg, rgba(30,27,24,0.015) 0px, rgba(30,27,24,0.015) 1px, transparent 1px, transparent 7px),
+        linear-gradient(180deg, var(--paper), var(--paper2));
+    }
 
     .page{
-      width: min(1100px, 100%);
-      padding: 28px 20px 40px;
+      width: min(1120px, 100%);
+      padding: 28px 20px 46px;
       box-sizing: border-box;
       font-family: Georgia, "Times New Roman", serif;
     }
 
-    .masthead{ text-align:center; margin-bottom: 18px; }
+    /* Masthead */
+    .masthead{ text-align:center; margin-bottom: 10px; }
     .masthead h1{
       margin: 0;
-      font-size: 48px;
-      letter-spacing: 0.4px;
-      font-family: "Georgia", serif;
+      font-size: 54px;
+      letter-spacing: 0.6px;
+      font-weight: 800;
     }
-    .masthead p{
+    .masthead .kicker{
       margin: 10px 0 0;
       font-size: 15px;
       color: var(--muted);
       font-style: italic;
+      line-height: 1.4;
     }
 
-    .rule{
-      margin: 18px 0 18px;
+    .ornament{
+      margin: 16px auto 18px;
+      width: min(720px, 95%);
       height: 1px;
       background: linear-gradient(90deg, transparent, var(--line), transparent);
+      position: relative;
+    }
+    .ornament:after{
+      content: "❦";
+      position:absolute;
+      top: -11px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--paper);
+      padding: 0 10px;
+      color: var(--accent);
+      font-size: 18px;
     }
 
-    .chaos{
-      background: var(--soft);
+    /* Layout blocks */
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .card{
+      background: rgba(255,255,255,0.85);
       border: 1px solid var(--line);
       border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .cardHeader{
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.65);
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* Chaos banner */
+    .chaos{
       padding: 16px 18px;
       text-align: center;
-      margin-bottom: 14px;
+      background: linear-gradient(180deg, rgba(180,138,60,0.10), rgba(255,255,255,0.80));
     }
     .chaos strong{
+      display:block;
       font-size: 12px;
-      letter-spacing: 1px;
+      letter-spacing: 1.2px;
       text-transform: uppercase;
       color: var(--muted);
-      display:block;
     }
     .chaos .count{
       font-size: 44px;
       margin-top: 8px;
       color: var(--accent);
-      font-weight: 700;
+      font-weight: 800;
       line-height: 1;
     }
     .chaos .label{
       margin-top: 6px;
       font-size: 14px;
       color: var(--muted);
+      font-style: italic;
     }
-
-    /* Map card */
-    .mapCard{
-      background:#fff;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
+    .chaos .bar{
+      margin: 12px auto 0;
+      height: 10px;
+      width: min(680px, 92%);
+      border-radius: 999px;
+      background: rgba(30,27,24,0.06);
+      border: 1px solid rgba(30,27,24,0.08);
       overflow: hidden;
-      margin-bottom: 12px;
     }
-    .mapTop{
-      display:flex;
-      align-items:center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--line);
-      background: #fffdf8;
-      color: var(--muted);
-      font-size: 13px;
+    .chaos .bar > div{
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, rgba(43,167,97,0.9), rgba(180,138,60,0.95), rgba(186,74,58,0.95));
+      transition: width 260ms ease;
     }
 
+    /* Map */
     #map{
       height: 320px;
       width: 100%;
     }
+    .leaflet-control-zoom a{
+      background: #fff !important;
+      border: 1px solid var(--line) !important;
+    }
 
+    /* Controls */
     .controls{
       display:flex;
       gap: 10px;
       flex-wrap: wrap;
       padding: 10px 12px;
       border-top: 1px solid var(--line);
-      background: #fff;
-      align-items: center;
+      background: rgba(255,255,255,0.85);
+      align-items:center;
     }
     .controls button,
     .controls input{
@@ -118,20 +171,53 @@
       border: 1px solid var(--line);
       background: #fff;
     }
+    .controls button{
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .controls button:hover{ filter: brightness(1.02); }
     .controls label{
-      display: inline-flex;
-      align-items: center;
+      display:inline-flex;
+      align-items:center;
       gap: 7px;
       font-size: 13px;
       color: var(--muted);
       user-select:none;
     }
-    .controls input[type="range"]{ width: 160px; }
+    .controls input[type="range"]{ width: 170px; }
+    .controls .mini{
+      color: var(--muted);
+      font-size: 12px;
+    }
 
+    /* Feature block */
+    .feature{
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.86);
+    }
+    .feature h2{
+      margin: 0 0 10px;
+      font-size: 20px;
+      display:flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .stamp{
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: normal;
+      font-style: italic;
+    }
+    .feature .lede{
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.55;
+      color: #2a2622;
+    }
+    .feature .lede em{ color: var(--accent2); font-style: italic; }
+
+    /* Digest */
     .digest{
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
       padding: 16px 18px;
     }
     .digest h2{
@@ -139,75 +225,229 @@
       font-size: 22px;
       display:flex;
       gap:10px;
-      align-items:center;
+      align-items: baseline;
     }
-    .digest h2 .stamp{
-      font-size: 12px;
+    .digest .sub{
       color: var(--muted);
-      font-weight: normal;
+      font-size: 12px;
+      font-style: italic;
     }
-    .digest pre{
-      white-space: pre-wrap;
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: 14px;
-      line-height: 1.6;
-      margin: 0;
+    .digestContent{
+      background: rgba(255,255,255,0.60);
+      border: 1px solid rgba(230,226,219,0.85);
+      border-radius: 14px;
+      padding: 14px 14px;
+      line-height: 1.65;
       color: #2a2622;
+    }
+    .digestContent p{
+      margin: 0 0 10px;
+    }
+    .digestContent p:last-child{ margin-bottom: 0; }
+
+    /* Drop cap on first paragraph */
+    .digestContent p:first-child::first-letter{
+      float:left;
+      font-size: 44px;
+      line-height: 1;
+      padding-right: 10px;
+      padding-top: 4px;
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    .list{
+      margin: 10px 0 0;
+      padding-left: 18px;
+    }
+    .list li{ margin: 5px 0; }
+    .muted{ color: var(--muted); }
+
+    /* Archive */
+    details.archive{
+      margin-top: 14px;
+      border-top: 1px solid rgba(230,226,219,0.9);
+      padding-top: 12px;
+    }
+    details.archive summary{
+      cursor:pointer;
+      font-weight: 700;
+      color: var(--accent2);
+    }
+    .edition{
+      margin-top: 10px;
+      padding: 12px 12px;
+      border: 1px solid rgba(230,226,219,0.85);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.65);
+    }
+    .edition .edTitle{
+      font-weight: 800;
+      color: #2a2622;
+      margin-bottom: 6px;
+    }
+    .edition .edText{
+      white-space: pre-wrap;
+      line-height: 1.55;
+      font-size: 13.5px;
+      color: #2a2622;
+      margin: 0;
+    }
+
+    /* Social Register */
+    .register{
+      padding: 14px 16px;
+    }
+    .register h2{
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+    .twoCol{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 860px){
+      .twoCol{ grid-template-columns: 1fr; }
+      .masthead h1{ font-size: 44px; }
+    }
+    .box{
+      background: rgba(255,255,255,0.65);
+      border: 1px solid rgba(230,226,219,0.9);
+      border-radius: 14px;
+      padding: 12px 12px;
+    }
+    .box h3{
+      margin: 0 0 8px;
+      font-size: 14px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .box ol{
+      margin: 0;
+      padding-left: 18px;
+      color: #2a2622;
+      line-height: 1.55;
     }
 
     a.caseLink{
-      color: var(--accent);
-      font-weight: 700;
+      color: var(--accent2);
+      font-weight: 800;
       text-decoration: underline;
     }
-
-    .leaflet-control-zoom a{
-      background: #fff !important;
-      border: 1px solid var(--line) !important;
+    .tinyNote{
+      font-size: 12px;
+      color: var(--muted);
+      font-style: italic;
+      margin-top: 6px;
     }
+
+    /* Small “sound” toggle */
+    .soundToggle{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      margin-left: auto;
+    }
+    .soundToggle input{ transform: translateY(1px); }
   </style>
 </head>
 
 <body>
   <div class="page">
     <div class="masthead">
-      <h1>Whispers from the Plaza</h1>
-      <p>Dearest reader, one’s neighborhood rarely rests quietly…</p>
+      <h1>Whispers from the Curb</h1>
+      <div class="kicker">Dearest reader, one’s neighborhood rarely rests quietly…</div>
     </div>
 
-    <div class="rule"></div>
+    <div class="ornament"></div>
 
-    <div class="chaos">
-      <strong>Current State of Affairs</strong>
-      <div class="count" id="chaosCount">—</div>
-      <div class="label" id="chaosLabel">Awaiting intelligence…</div>
-    </div>
-
-    <div class="mapCard">
-      <div class="mapTop">
-        <span>🗺️ The Situation Map</span>
-        <span id="mapNote">Drag HQ if you must.</span>
-      </div>
-
-      <div id="map"></div>
-
-      <div class="controls">
-        <button id="refreshBtn">Refresh intelligence</button>
-
-        <label><input type="checkbox" id="parkingOnly" checked> Parking only</label>
-        <label><input type="checkbox" id="excludeTraffic" checked> Exclude traffic</label>
-
-        <label>
-          Radius
-          <input id="radius" type="range" min="0.25" max="2.0" step="0.25" value="1.0" />
-          <span id="radiusLabel">1.00</span> mi
-        </label>
+    <!-- CHAOS -->
+    <div class="card">
+      <div class="chaos">
+        <strong>Current State of Affairs</strong>
+        <div class="count" id="chaosCount">—</div>
+        <div class="label" id="chaosLabel">Awaiting intelligence…</div>
+        <div class="bar"><div id="chaosBar"></div></div>
       </div>
     </div>
 
-    <div class="digest">
-      <h2>📰 The Daily Dispatch <span class="stamp" id="stamp">—</span></h2>
-      <pre id="digestBox">Gathering whispers…</pre>
+    <div class="grid">
+      <!-- MAP -->
+      <div class="card">
+        <div class="cardHeader">
+          <span>🗺️ The Situation Map</span>
+          <span class="soundToggle">
+            <label style="gap:6px; color:var(--muted); font-size:12px;">
+              <input type="checkbox" id="soundOn" />
+              🎻 discreet music
+            </label>
+          </span>
+        </div>
+        <div id="map"></div>
+        <div class="controls">
+          <button id="refreshBtn">Refresh intelligence</button>
+
+          <label><input type="checkbox" id="parkingOnly" checked> Parking only</label>
+          <label><input type="checkbox" id="excludeTraffic" checked> Exclude traffic</label>
+
+          <label>
+            Radius
+            <input id="radius" type="range" min="0.25" max="2.0" step="0.25" value="1.0" />
+            <span id="radiusLabel">1.00</span> mi
+          </label>
+
+          <span class="mini" id="diag">Gathering whispers…</span>
+        </div>
+      </div>
+
+      <!-- FEATURED SCANDAL -->
+      <div class="card">
+        <div class="feature">
+          <h2>👀 All Eyes Upon… <span class="stamp" id="featureStamp">—</span></h2>
+          <p class="lede" id="featureText">
+            Our columnist awaits today’s most conspicuous curbside affair…
+          </p>
+          <div class="tinyNote" id="featureNote"></div>
+        </div>
+      </div>
+
+      <!-- SOCIAL REGISTER -->
+      <div class="card">
+        <div class="register">
+          <h2>👒 The Social Register</h2>
+          <div class="twoCol">
+            <div class="box">
+              <h3>Most Mentioned Addresses</h3>
+              <ol id="topAddresses"></ol>
+              <div class="tinyNote">The ton never forgets.</div>
+            </div>
+            <div class="box">
+              <h3>Most Mentioned Scandals</h3>
+              <ol id="topTypes"></ol>
+              <div class="tinyNote">Some dramas simply insist upon returning.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIGEST + ARCHIVE -->
+      <div class="card">
+        <div class="digest">
+          <h2>📰 The Daily Dispatch <span class="sub" id="stamp">—</span></h2>
+
+          <div class="digestContent" id="digestContent">
+            <p>Gathering whispers…</p>
+          </div>
+
+          <details class="archive">
+            <summary>Previous Editions (archived locally)</summary>
+            <div id="archiveList"></div>
+            <div class="tinyNote">Stored in your browser only. Clearing site data clears the archive.</div>
+          </details>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -215,87 +455,237 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // ===== SETTINGS =====
+      // ========= SETTINGS =========
       const DEFAULT_HOME = { lat: 29.828103, lon: -95.426829 };
+      const CASE_STATUS_URL = "https://houston311.powerappsportals.us/en-US/checkcasestatus/";
       const $ = (id) => document.getElementById(id);
 
-      // Persist HQ so it won’t “wander”
+      // Local storage keys
+      const HQ_KEY = "whistledown_hq_v2";
+      const ARCHIVE_KEY = "whistledown_archive_v1"; // { "YYYY-MM-DD": {text, createdAt} }
+      const SNAP_KEY = "whistledown_daily_snap_v1"; // { caseId: status }
+      const SNAP_DATE_KEY = "whistledown_snap_date_v1";
+
+      // ========= HELPERS =========
+      function todayLocalYYYYMMDD(){
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth()+1).padStart(2,"0");
+        const day = String(d.getDate()).padStart(2,"0");
+        return `${y}-${m}-${day}`;
+      }
+
       function loadHome(){
-        const raw = localStorage.getItem("whistledown_hq_v1");
+        const raw = localStorage.getItem(HQ_KEY);
         if(!raw) return { ...DEFAULT_HOME };
-        try {
+        try{
           const o = JSON.parse(raw);
           if (Number.isFinite(o.lat) && Number.isFinite(o.lon)) return o;
-        } catch {}
+        }catch{}
         return { ...DEFAULT_HOME };
       }
       function saveHome(lat, lon){
-        localStorage.setItem("whistledown_hq_v1", JSON.stringify({ lat, lon }));
+        localStorage.setItem(HQ_KEY, JSON.stringify({lat, lon}));
       }
-
-      let HOME = loadHome();
-      let radiusMiles = Number($("radius").value || 1.0);
-
-      // ===== HELPERS =====
-      const trafficRe = /traffic|signal|sign|street\s*light|streetlight/i;
-      const parkingRe = /park|parking|vehicle|tow|driveway|abandoned|obstruction|illegally\s*park/i;
-
-      function isTraffic(type){ return trafficRe.test(type || ""); }
-      function isParking(type){ return parkingRe.test(type || ""); }
 
       function milesToLatDeg(mi){ return mi / 69.0; }
       function milesToLonDeg(mi, lat){ return mi / (69.0 * Math.cos(lat * Math.PI/180)); }
+
+      function haversineMiles(lat1, lon1, lat2, lon2){
+        const R = 3958.8;
+        const toRad = (x) => x * Math.PI / 180;
+        const dLat = toRad(lat2 - lat1);
+        const dLon = toRad(lon2 - lon1);
+        const a =
+          Math.sin(dLat/2)**2 +
+          Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+        return 2 * R * Math.asin(Math.sqrt(a));
+      }
+
+      const trafficRe = /traffic|signal|sign|street\s*light|streetlight/i;
+      const parkingRe = /park|parking|vehicle|tow|driveway|abandoned|obstruction|illegally\s*park|blocked/i;
+
+      function isTraffic(type){ return trafficRe.test(type || ""); }
+      function isParking(type){ return parkingRe.test(type || ""); }
 
       function makeCaseId(a){
         return String(a.CaseNumber365 || a.CaseNumber || a.ObjectID || (a.IncidentAddress||"") + "::" + (a.CreatedDate||""));
       }
 
-      // Houston portal NOTE: it does NOT reliably accept query params to pre-fill case/address.
-      // So we link to the status page + show the case number in the popup for copy/paste.
-      const CASE_STATUS_URL = "https://houston311.powerappsportals.us/en-US/checkcasestatus/";
-
-      function buildArcgisUrl(){
-        const latPad = milesToLatDeg(radiusMiles) * 1.25;
-        const lonPad = milesToLonDeg(radiusMiles, HOME.lat) * 1.25;
-
-        const minLat = (HOME.lat - latPad).toFixed(6);
-        const maxLat = (HOME.lat + latPad).toFixed(6);
-        const minLon = (HOME.lon - lonPad).toFixed(6);
-        const maxLon = (HOME.lon + lonPad).toFixed(6);
-
-        const where =
-          `Latitude >= ${minLat} AND Latitude <= ${maxLat} AND Longitude >= ${minLon} AND Longitude <= ${maxLon}`;
-
-        const params = new URLSearchParams({
-          where,
-          outFields: "CaseType,StateCodeName,Status,IncidentAddress,Latitude,Longitude,CaseNumber365,CaseNumber,CreatedDate,ClosedDate",
-          resultRecordCount: "2000",
-          f: "json"
-        });
-
-        return "https://mycity2.houstontx.gov/pubgis01/rest/services/311/Houston311_RecentServiceRequests/FeatureServer/3/query?" + params.toString();
+      function normalizeStatus(a){
+        return (a.StateCodeName || a.Status || "").toLowerCase().trim();
+      }
+      function isOpenish(status){
+        return status.includes("active") || status.includes("open") || status.includes("routed") || status.includes("acknowledged");
       }
 
-      function setChaos(n){
-        $("chaosCount").textContent = String(n);
-        $("chaosLabel").textContent =
-          n === 0 ? "A blessed silence." :
-          n < 3 ? "A murmur among the hedges." :
-          n < 7 ? "Raised eyebrows at the garden party." :
-          n < 12 ? "Whispers become a scandal." :
-          "Society is in shambles.";
+      function safeText(s){ return String(s || "").replace(/[<>]/g, ""); }
+
+      // ========= WHISTLEDOWN PROSE =========
+      function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+
+      function whistledownify(caseType, address, status){
+        const openers = [
+          "Dearest reader, it would seem that",
+          "One cannot help but notice that",
+          "Society whispers that",
+          "It has come to this author’s attention that"
+        ];
+        const verbs = [
+          "has once again made an appearance",
+          "has attracted entirely too much attention",
+          "has caused several pearls to be clutched",
+          "has become the talk of the street"
+        ];
+        const closersOpen = [
+          "—and the matter remains, regrettably, unresolved.",
+          "—a scandal still very much alive.",
+          "—one suspects the ton will not let this rest."
+        ];
+        const closersClosed = [
+          "—a drama now mercifully concluded.",
+          "—a chapter closed, at last.",
+          "—society exhales… for now."
+        ];
+
+        const st = (status || "").toLowerCase();
+        const closer = isOpenish(st) ? pick(closersOpen) : pick(closersClosed);
+
+        const type = (caseType || "a curbside affair").toLowerCase();
+        const addr = address ? `near <em>${safeText(address)}</em>` : "in your vicinity";
+
+        return `${pick(openers)} <em>${type}</em> ${pick(verbs)} ${addr} ${closer}`;
       }
 
-      function setDigest(text){
-        $("digestBox").textContent = text;
-        $("stamp").textContent = "Last run: " + new Date().toLocaleString();
+      function whistledownIntro(chaosCount){
+        if (chaosCount === 0) return "It appears the curbside remains delightfully unremarkable today. How rare.";
+        if (chaosCount <= 2) return "A gentle murmur among the hedges—nothing the household cannot endure.";
+        if (chaosCount <= 6) return "Raised eyebrows at the garden party. One suggests keeping a fan close at hand.";
+        if (chaosCount <= 12) return "A scandal begins to bloom. One does hope the neighbors are seated.";
+        return "Society is in shambles. Even the Queen would raise an eyebrow.";
       }
 
-      // ===== MAP INIT (this was the part that was breaking) =====
-      const map = L.map("map", { zoomControl: true }).setView([HOME.lat, HOME.lon], 16);
+      // ========= ARCHIVE =========
+      function loadArchive(){
+        const raw = localStorage.getItem(ARCHIVE_KEY);
+        if(!raw) return {};
+        try{ return JSON.parse(raw) || {}; }catch{ return {}; }
+      }
+      function saveArchive(obj){
+        localStorage.setItem(ARCHIVE_KEY, JSON.stringify(obj));
+      }
 
-      // Force a size calc after layout paints (prevents blank map in some cases)
-      setTimeout(() => map.invalidateSize(), 50);
+      function renderArchive(){
+        const arch = loadArchive();
+        const keys = Object.keys(arch).sort().reverse();
+
+        const host = $("archiveList");
+        host.innerHTML = "";
+
+        if (keys.length === 0){
+          host.innerHTML = `<div class="edition"><div class="edTitle">No prior editions yet</div><pre class="edText">Refresh at least once on a different day to build your archive.</pre></div>`;
+          return;
+        }
+
+        for (const day of keys.slice(0, 14)){
+          const ed = arch[day];
+          const div = document.createElement("div");
+          div.className = "edition";
+          div.innerHTML = `
+            <div class="edTitle">Edition of ${day}</div>
+            <pre class="edText">${ed.text || ""}</pre>
+          `;
+          host.appendChild(div);
+        }
+      }
+
+      // ========= SNAPSHOT (for change detection) =========
+      function loadSnap(){
+        const raw = localStorage.getItem(SNAP_KEY);
+        if(!raw) return {};
+        try{ return JSON.parse(raw) || {}; }catch{ return {}; }
+      }
+      function saveSnap(obj){
+        localStorage.setItem(SNAP_KEY, JSON.stringify(obj));
+      }
+
+      // ========= DISCREET MUSIC (WebAudio) =========
+      let audioCtx = null;
+      let drone = null;
+      function startMusic(){
+        try{
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (drone) return;
+
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          const filter = audioCtx.createBiquadFilter();
+
+          osc.type = "sine";
+          osc.frequency.value = 196; // G3-ish
+          filter.type = "lowpass";
+          filter.frequency.value = 600;
+
+          gain.gain.value = 0.00001; // start silent
+
+          osc.connect(filter);
+          filter.connect(gain);
+          gain.connect(audioCtx.destination);
+
+          osc.start();
+          drone = { osc, gain };
+
+          // fade in gently
+          const now = audioCtx.currentTime;
+          gain.gain.setValueAtTime(0.00001, now);
+          gain.gain.linearRampToValueAtTime(0.010, now + 1.5);
+        }catch{}
+      }
+
+      function stopMusic(){
+        try{
+          if (!audioCtx || !drone) return;
+          const now = audioCtx.currentTime;
+          drone.gain.gain.setValueAtTime(drone.gain.gain.value, now);
+          drone.gain.gain.linearRampToValueAtTime(0.00001, now + 0.6);
+          setTimeout(() => {
+            try{ drone.osc.stop(); }catch{}
+            drone = null;
+          }, 700);
+        }catch{}
+      }
+
+      function blipIfNew(){
+        // tiny “harp blip” for new cases (if sound enabled)
+        if (!$("soundOn").checked) return;
+        try{
+          if (!audioCtx) startMusic();
+          const ctx = audioCtx;
+          if (!ctx) return;
+
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = "triangle";
+          o.frequency.value = 523.25; // C5
+          g.gain.value = 0.00001;
+
+          o.connect(g); g.connect(ctx.destination);
+          const t = ctx.currentTime;
+          o.start(t);
+          g.gain.setValueAtTime(0.00001, t);
+          g.gain.linearRampToValueAtTime(0.04, t + 0.02);
+          g.gain.exponentialRampToValueAtTime(0.00001, t + 0.22);
+          o.stop(t + 0.25);
+        }catch{}
+      }
+
+      // ========= STATE =========
+      let HOME = loadHome();
+      let radiusMiles = Number($("radius").value || 1.0);
+
+      // ========= MAP =========
+      const map = L.map("map").setView([HOME.lat, HOME.lon], 16);
+      setTimeout(() => map.invalidateSize(), 60);
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
@@ -323,7 +713,6 @@
       });
 
       let markers = new Map();
-
       function clearPins(){
         for (const m of markers.values()) map.removeLayer(m);
         markers.clear();
@@ -344,7 +733,7 @@
             border-radius: 999px;
             background: rgba(255,255,255,0.95);
             border: 1px solid rgba(0,0,0,0.12);
-            box-shadow: 0 8px 22px rgba(0,0,0,0.12);
+            box-shadow: 0 10px 22px rgba(25,18,10,0.12);
             font-size: 16px;
           ">🚨</div>`,
           iconSize: [26, 26],
@@ -353,14 +742,14 @@
 
         const m = L.marker([lat, lon], { icon }).addTo(map);
 
-        const type = a.CaseType || "311";
-        const status = a.StateCodeName || a.Status || "Unknown";
-        const address = a.IncidentAddress || "—";
-        const caseNum = a.CaseNumber365 || a.CaseNumber || "—";
+        const type = safeText(a.CaseType || "311");
+        const status = safeText(a.StateCodeName || a.Status || "Unknown");
+        const address = safeText(a.IncidentAddress || "—");
+        const caseNum = safeText(a.CaseNumber365 || a.CaseNumber || "—");
 
         m.bindPopup(`
           <div style="font-family:Georgia,serif; line-height:1.45;">
-            <div style="font-size:16px; font-weight:700;">${type}</div>
+            <div style="font-size:16px; font-weight:800;">${type}</div>
             <div style="color:#6f6a64;">${address}</div>
             <div style="margin-top:6px;">Status: <b>${status}</b></div>
             <div style="margin-top:6px;">Case #: <b>${caseNum}</b></div>
@@ -369,8 +758,8 @@
                 Open Houston 311 case status
               </a>
             </div>
-            <div style="margin-top:6px; color:#6f6a64; font-size:12px;">
-              (Houston’s site doesn’t reliably accept pre-filled links—copy/paste the case # above.)
+            <div class="tinyNote" style="margin-top:6px;">
+              The portal does not reliably accept pre-filled links; copy/paste the case # above.
             </div>
           </div>
         `);
@@ -378,13 +767,80 @@
         markers.set(id, m);
       }
 
+      // ========= UI =========
+      function setChaos(n){
+        $("chaosCount").textContent = String(n);
+        $("chaosLabel").textContent =
+          n === 0 ? "A blessed silence." :
+          n <= 2 ? "A murmur among the hedges." :
+          n <= 6 ? "Raised eyebrows at the garden party." :
+          n <= 12 ? "Whispers become a scandal." :
+          "Society is in shambles.";
+        const pct = Math.min(100, Math.round((n / 18) * 100));
+        $("chaosBar").style.width = pct + "%";
+      }
+
+      function setStamp(){
+        $("stamp").textContent = "Last run: " + new Date().toLocaleString();
+      }
+
+      function setDiag(text){
+        $("diag").textContent = text;
+      }
+
+      function setFeature(text, note){
+        $("featureText").innerHTML = text;
+        $("featureStamp").textContent = "— " + new Date().toLocaleTimeString();
+        $("featureNote").textContent = note || "";
+      }
+
+      function renderTopList(el, items){
+        el.innerHTML = "";
+        if (!items.length){
+          el.innerHTML = `<li class="muted">No entries yet.</li>`;
+          return;
+        }
+        for (const it of items.slice(0, 5)){
+          const li = document.createElement("li");
+          li.textContent = it;
+          el.appendChild(li);
+        }
+      }
+
+      // ========= ARC GIS QUERY =========
+      function buildArcgisUrl(){
+        const latPad = milesToLatDeg(radiusMiles) * 1.25;
+        const lonPad = milesToLonDeg(radiusMiles, HOME.lat) * 1.25;
+
+        const minLat = (HOME.lat - latPad).toFixed(6);
+        const maxLat = (HOME.lat + latPad).toFixed(6);
+        const minLon = (HOME.lon - lonPad).toFixed(6);
+        const maxLon = (HOME.lon + lonPad).toFixed(6);
+
+        const where =
+          `Latitude >= ${minLat} AND Latitude <= ${maxLat} AND Longitude >= ${minLon} AND Longitude <= ${maxLon}`;
+
+        const params = new URLSearchParams({
+          where,
+          outFields: "CaseType,StateCodeName,Status,IncidentAddress,Latitude,Longitude,CaseNumber365,CaseNumber,CreatedDate,ClosedDate",
+          resultRecordCount: "2000",
+          f: "json"
+        });
+
+        return "https://mycity2.houstontx.gov/pubgis01/rest/services/311/Houston311_RecentServiceRequests/FeatureServer/3/query?" + params.toString();
+      }
+
+      // ========= MAIN REFRESH =========
       async function refresh(){
         $("radiusLabel").textContent = radiusMiles.toFixed(2);
         radiusCircle.setRadius(radiusMiles * 1609.34);
+        setStamp();
+        setDiag("Gathering whispers…");
 
-        setDigest("Gathering whispers…");
+        if ($("soundOn").checked) startMusic();
+        else stopMusic();
 
-        try {
+        try{
           clearPins();
 
           const url = buildArcgisUrl();
@@ -395,61 +851,208 @@
           const parkingOnly = $("parkingOnly").checked;
           const excludeTraffic = $("excludeTraffic").checked;
 
-          const lines = [];
-          let shown = 0;
-
-          for (const a of feats) {
+          // Filter
+          const filtered = [];
+          for (const a of feats){
             const type = a.CaseType || "";
-
             if (excludeTraffic && isTraffic(type)) continue;
             if (parkingOnly && !isParking(type)) continue;
-
-            shown++;
-            addSirenMarker(a);
-
-            const caseNum = a.CaseNumber365 || a.CaseNumber || "—";
-            lines.push(`• ${a.CaseType || "311"} — ${a.IncidentAddress || "—"} (Case ${caseNum})`);
+            filtered.push(a);
           }
 
-          setChaos(shown);
+          // Pins + compute distances
+          const cases = filtered.map(a => {
+            const lat = Number(a.Latitude);
+            const lon = Number(a.Longitude);
+            const dist = (Number.isFinite(lat) && Number.isFinite(lon))
+              ? haversineMiles(HOME.lat, HOME.lon, lat, lon)
+              : Infinity;
 
-          if (shown === 0) {
-            setDigest("It appears the curbside remains unremarkable today.\n\n(If you expected results, try unchecking “Parking only” or increasing the radius.)");
+            return {
+              raw: a,
+              id: makeCaseId(a),
+              type: a.CaseType || "311",
+              status: normalizeStatus(a),
+              address: a.IncidentAddress || "",
+              caseNum: a.CaseNumber365 || a.CaseNumber || "",
+              dist
+            };
+          }).sort((x,y) => x.dist - y.dist);
+
+          for (const c of cases) addSirenMarker(c.raw);
+
+          setChaos(cases.length);
+
+          // Social register: top addresses + top types from TODAY’s set
+          const addrCount = new Map();
+          const typeCount = new Map();
+          for (const c of cases){
+            const addr = (c.address || "Unknown address").trim();
+            const typ = (c.type || "Unknown type").trim();
+            addrCount.set(addr, (addrCount.get(addr) || 0) + 1);
+            typeCount.set(typ, (typeCount.get(typ) || 0) + 1);
+          }
+          const topAddr = [...addrCount.entries()].sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k} (${v})`);
+          const topTyp  = [...typeCount.entries()].sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k} (${v})`);
+          renderTopList($("topAddresses"), topAddr);
+          renderTopList($("topTypes"), topTyp);
+
+          // Feature: closest OPEN-ish case if any, else closest case
+          let featured = cases.find(c => isOpenish(c.status)) || cases[0];
+          if (!featured){
+            setFeature(`${whistledownIntro(0)}`, "");
           } else {
-            setDigest(lines.join("\n"));
+            const ft = whistledownify(featured.type, featured.address, featured.status);
+            const note = `Closest affair is ~${featured.dist.toFixed(2)} miles from HQ. Case # ${featured.caseNum || "—"}.`;
+            setFeature(ft, note);
           }
 
-          // Recenter gently to HQ if map was blank before
-          map.setView([HOME.lat, HOME.lon], map.getZoom());
+          // Daily digest + archive + change detection
+          const today = todayLocalYYYYMMDD();
+          const prevDate = localStorage.getItem(SNAP_DATE_KEY);
+          const prevSnap = loadSnap();
+          const todaySnap = {};
 
-        } catch (err) {
+          // Build prose paragraphs
+          const intro = whistledownIntro(cases.length);
+          const paragraphs = [];
+
+          paragraphs.push(intro);
+
+          if (cases.length === 0){
+            paragraphs.push("Should any carriage misbehave, this author shall return at once.");
+          } else {
+            // “New / Changed / Still open” sections
+            const newOnes = [];
+            const changed = [];
+            const openNow = [];
+
+            for (const c of cases){
+              todaySnap[c.id] = c.status;
+
+              if (!prevSnap[c.id]) newOnes.push(c);
+              else if (prevSnap[c.id] !== c.status) changed.push({ ...c, before: prevSnap[c.id] });
+
+              if (isOpenish(c.status)) openNow.push(c);
+            }
+
+            // Missing: in prev, not in today
+            const missing = [];
+            for (const pid of Object.keys(prevSnap)){
+              if (!todaySnap[pid]) missing.push(pid);
+            }
+
+            // Build edition text
+            if (prevDate && prevDate !== today){
+              paragraphs.push(`An editorial note: yesterday’s edition was dated <em>${prevDate}</em>. Today, we compare.`);
+            }
+
+            if (openNow.length){
+              paragraphs.push(`<em>Open matters</em> presently occupy society’s attention (${openNow.length}).`);
+            }
+
+            if (newOnes.length){
+              paragraphs.push(`Fresh whispers have arrived (${newOnes.length}). How industrious.`);
+              // a few bullets in prose form
+              const list = newOnes.slice(0, 6).map(c => `• ${whistledownify(c.type, c.address, c.status).replace(/<[^>]+>/g,"")}`);
+              paragraphs.push(list.join("\n"));
+              if (newOnes.length > 6) paragraphs.push(`…and ${newOnes.length - 6} more newly noted affairs.`);
+              blipIfNew();
+            }
+
+            if (changed.length){
+              paragraphs.push(`Certain situations have evolved (${changed.length})—and society adores a plot twist.`);
+              const list = changed.slice(0, 6).map(c =>
+                `• ${safeText(c.type)} at ${safeText(c.address)} moved from "${safeText(c.before)}" → "${safeText(c.status)}".`
+              );
+              paragraphs.push(list.join("\n"));
+            }
+
+            if (missing.length){
+              paragraphs.push(`A curious development: ${missing.length} previously observed items have vanished from today’s pages. One assumes closure… or discretion.`);
+            }
+
+            if (!newOnes.length && !changed.length && !missing.length){
+              paragraphs.push("No notable changes since the last time you consulted this paper. How… stable.");
+            }
+          }
+
+          // Render digest as paragraphs
+          const digestEl = $("digestContent");
+          digestEl.innerHTML = "";
+          const textForArchive = [];
+
+          for (const block of paragraphs){
+            // If block has bullet lines, keep it as <pre>-ish
+            if (block.includes("\n• " ) || block.startsWith("• ") || block.includes("\n")){
+              const p = document.createElement("p");
+              p.textContent = block; // keeps line breaks in CSS? not in <p>
+              // better: use <pre> inside
+              const pre = document.createElement("pre");
+              pre.style.margin = "0 0 10px";
+              pre.style.whiteSpace = "pre-wrap";
+              pre.style.fontFamily = "Georgia, serif";
+              pre.style.fontSize = "14px";
+              pre.style.lineHeight = "1.6";
+              pre.textContent = block;
+              digestEl.appendChild(pre);
+              textForArchive.push(block);
+            } else {
+              const p = document.createElement("p");
+              p.innerHTML = block;
+              digestEl.appendChild(p);
+              textForArchive.push(block.replace(/<[^>]+>/g,""));
+            }
+          }
+
+          // Save archive ONCE PER DAY (first run of that day)
+          const arch = loadArchive();
+          if (!arch[today]){
+            arch[today] = {
+              createdAt: Date.now(),
+              text: textForArchive.join("\n\n")
+            };
+            saveArchive(arch);
+          }
+          renderArchive();
+
+          // Save snapshot every run
+          saveSnap(todaySnap);
+          localStorage.setItem(SNAP_DATE_KEY, today);
+
+          setDiag(`ArcGIS returned ${feats.length} in bbox; showing ${cases.length} after filters.`);
+
+        } catch (err){
           console.error(err);
           setChaos(0);
-          setDigest(
-            "The messenger has fainted.\n\n" +
-            "What I know:\n" +
-            "- The map should still render even if the data fails.\n" +
-            "- If this message appears, a request or script crashed.\n\n" +
-            "Error:\n" + String(err)
-          );
+          setFeature("Our messenger has fainted. One must fan them immediately.", "");
+          $("digestContent").innerHTML = `<p><b>Alas!</b> The paper cannot be printed at this moment.</p>
+            <p class="muted">Error: ${safeText(String(err))}</p>`;
+          setDiag("Error fetching or parsing data. See console for details.");
         }
       }
 
-      // ===== UI wiring =====
-      $("radiusLabel").textContent = radiusMiles.toFixed(2);
-      $("radius").addEventListener("input", async (e) => {
-        radiusMiles = Number(e.target.value);
-        await refresh();
-      });
-
+      // ========= EVENTS =========
       $("refreshBtn").addEventListener("click", refresh);
       $("parkingOnly").addEventListener("change", refresh);
       $("excludeTraffic").addEventListener("change", refresh);
 
-      // First run
+      $("radius").addEventListener("input", (e) => {
+        radiusMiles = Number(e.target.value);
+        $("radiusLabel").textContent = radiusMiles.toFixed(2);
+        refresh();
+      });
+
+      $("soundOn").addEventListener("change", () => {
+        if ($("soundOn").checked) startMusic();
+        else stopMusic();
+      });
+
+      // Initial render of archive & first run
+      renderArchive();
+      $("radiusLabel").textContent = radiusMiles.toFixed(2);
       refresh();
     });
   </script>
 </body>
 </html>
-
