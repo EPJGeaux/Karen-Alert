@@ -3,366 +3,324 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Let Me Speak To Your Manager — Karen Radar</title>
+  <title>🚨 Emergency Karen Broadcast System</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
   <style>
-    /* ========= BASE LAYOUT ========= */
     :root{
-      --bg: #0b0014;
-      --panel: rgba(255,255,255,0.94);
-      --ink: #120018;
-      --muted: #5a5a66;
-      --accent1: #ff4fd8;
-      --accent2: #6dfffd;
-      --shadow: 0 10px 30px rgba(0,0,0,0.35);
-      --neon1: 0 0 30px rgba(255,0,255,0.25);
-      --neon2: 0 0 60px rgba(0,255,255,0.18);
+      --bg: #06070a;
+      --panel: rgba(15, 17, 22, 0.94);
+      --panel2: rgba(10, 12, 16, 0.92);
+      --ink: #f3f5ff;
+      --muted: rgba(243,245,255,0.75);
+      --danger: #ff2a2a;
+      --warn: #ffcc00;
+      --ok: #2bff88;
+      --line: rgba(255,255,255,0.12);
       --radius: 18px;
     }
 
-    html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
-    body { background: radial-gradient(1200px 800px at 10% 10%, #23003d 0%, var(--bg) 55%, #05000a 100%); color: var(--ink); }
+    html, body { height: 100%; margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    body{
+      background:
+        radial-gradient(900px 600px at 15% 15%, rgba(255,42,42,0.15), transparent 55%),
+        radial-gradient(900px 600px at 85% 35%, rgba(255,204,0,0.10), transparent 55%),
+        linear-gradient(180deg, #030408, var(--bg));
+      color: var(--ink);
+    }
 
     .app{
       height: 100%;
       display: grid;
-      grid-template-columns: 420px 1fr;
+      grid-template-columns: 520px 1fr;
       gap: 14px;
       padding: 14px;
       box-sizing: border-box;
     }
 
-    /* Left: control + digest */
     .left{
       background: var(--panel);
       border-radius: var(--radius);
-      box-shadow: var(--shadow), var(--neon1), var(--neon2);
-      border: 2px solid rgba(255,0,255,0.25);
+      border: 1px solid var(--line);
       overflow: hidden;
       display: flex;
       flex-direction: column;
       min-width: 0;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.55);
     }
 
-    /* Right: map card */
     .right{
-      background: rgba(255,255,255,0.08);
+      background: var(--panel2);
       border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid var(--line);
       overflow: hidden;
-      min-width: 0;
       display: flex;
       flex-direction: column;
+      min-width: 0;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.55);
     }
 
-    #map{
-      flex: 1;
-      min-height: 320px;
-      width: 100%;
-    }
-
-    /* ========= HEADER / MASCOT ========= */
+    /* HEADER */
     .header{
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      padding: 14px 14px 10px 14px;
-      border-bottom: 1px solid rgba(0,0,0,0.06);
-      background: linear-gradient(90deg, rgba(255,79,216,0.10), rgba(109,255,253,0.10));
+      padding: 14px 14px 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background:
+        repeating-linear-gradient(
+          90deg,
+          rgba(255,42,42,0.18) 0px,
+          rgba(255,42,42,0.18) 12px,
+          rgba(0,0,0,0.0) 12px,
+          rgba(0,0,0,0.0) 24px
+        );
     }
 
-    .title{
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      min-width: 0;
-    }
-
-    .title h1{
+    .h1{
       margin: 0;
+      font-weight: 900;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
       font-size: 16px;
-      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .tag{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.22);
+      background: rgba(0,0,0,0.35);
+      font-size: 12px;
+    }
+
+    .ticker{
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
       display: flex;
       align-items: center;
       gap: 8px;
       flex-wrap: wrap;
     }
 
-    .chip{
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 3px 10px;
-      border-radius: 999px;
+    /* CHAOS METER (PROMINENT) */
+    .chaosWrap{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.40);
+    }
+    .chaosTop{
+      display:flex; align-items: center; justify-content: space-between; gap: 10px;
+      font-weight: 900;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
       font-size: 12px;
-      font-weight: 800;
-      background: linear-gradient(90deg, var(--accent1), var(--accent2));
-      color: #0b0014;
-      border: 1px solid rgba(0,0,0,0.10);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+    .chaosValue{
+      font-size: 22px;
+      font-weight: 1000;
+      letter-spacing: 1px;
+      margin-top: 6px;
+      display:flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .chaosValue .count{
+      color: var(--warn);
+      text-shadow: 0 0 18px rgba(255,204,0,0.25);
+    }
+    .bar{
+      margin-top: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.10);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.14);
+    }
+    .bar > div{
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--ok), var(--warn), var(--danger));
+      filter: saturate(1.2);
+      box-shadow: 0 0 25px rgba(255,42,42,0.18);
+      transition: width 300ms ease;
     }
 
-    .subtitle{
-      margin: 0;
+    /* CONTROLS */
+    .controls{
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      gap: 10px;
+      background: rgba(0,0,0,0.18);
+    }
+
+    .row{ display:flex; gap: 8px; align-items:center; }
+    input[type="text"]{
+      flex: 1;
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.35);
+      color: var(--ink);
+      outline: none;
+    }
+    input[type="text"]::placeholder{ color: rgba(243,245,255,0.55); }
+
+    button{
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.55);
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 900;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+    button:hover{ filter: brightness(1.12); }
+    button:active{ transform: translateY(1px); }
+
+    label{
+      display:flex; align-items:center; gap: 10px;
       font-size: 12px;
       color: var(--muted);
+      user-select: none;
+    }
+    input[type="checkbox"]{ transform: scale(1.05); }
+
+    .metaLine{
+      color: rgba(243,245,255,0.75);
+      font-size: 12px;
       line-height: 1.3;
     }
 
-    /* CSS Karen mascot (no external images) */
-    .karen{
-      width: 84px;
-      height: 84px;
-      position: relative;
-      border-radius: 18px;
-      background: rgba(255,255,255,0.65);
-      border: 1px solid rgba(0,0,0,0.06);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.18);
-      display: grid;
-      place-items: center;
-      overflow: hidden;
-    }
-    .karen .face{
-      width: 46px;
-      height: 52px;
-      background: #ffd6c9;
-      border-radius: 24px 24px 20px 20px;
-      position: relative;
-      box-shadow: inset 0 -4px 0 rgba(0,0,0,0.06);
-      transform: translateY(6px);
-    }
-    .karen .bang{
-      position:absolute;
-      width: 54px; height: 28px;
-      background: #c7a36a;
-      border-radius: 30px 30px 18px 18px;
-      top: 12px; left: 14px;
-      transform: rotate(-6deg);
-      box-shadow: inset 0 -4px 0 rgba(0,0,0,0.12);
-    }
-    .karen .bob{
-      position:absolute;
-      width: 86px; height: 46px;
-      background: #c7a36a;
-      border-radius: 28px 28px 34px 34px;
-      top: 18px; left: -4px;
-      transform: rotate(10deg);
-      box-shadow: inset 0 -6px 0 rgba(0,0,0,0.12);
-      opacity: 0.95;
-    }
-    .karen .flip{
-      position:absolute;
-      width: 44px; height: 22px;
-      background: #c7a36a;
-      border-radius: 22px 22px 22px 22px;
-      top: 38px; right: -8px;
-      transform: rotate(22deg);
-      box-shadow: inset 0 -4px 0 rgba(0,0,0,0.12);
-    }
-    .karen .eyes{
-      position:absolute; top: 26px; left: 10px; right: 10px;
-      display:flex; justify-content: space-between;
-    }
-    .karen .eye{
-      width: 8px; height: 8px; background:#2a1a2c; border-radius: 99px;
-      box-shadow: 0 0 0 3px rgba(255,255,255,0.55);
-    }
-    .karen .mouth{
-      position:absolute; bottom: 10px; left: 50%;
-      width: 16px; height: 6px;
-      transform: translateX(-50%);
-      border-radius: 0 0 10px 10px;
-      background: rgba(0,0,0,0.18);
-    }
-    .karen .badge{
-      position:absolute; bottom: 6px; left: 6px;
-      font-size: 10px;
-      background: rgba(0,0,0,0.72);
-      color: #fff;
-      padding: 2px 6px;
-      border-radius: 999px;
-    }
-
-    /* ========= CONTROLS ========= */
-    .controls{
-      padding: 12px 14px;
-      display: grid;
-      gap: 10px;
-      border-bottom: 1px solid rgba(0,0,0,0.06);
-      background: rgba(255,255,255,0.75);
-    }
-
-    .row{
-      display:flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    input[type="text"]{
-      flex: 1;
-      padding: 9px 10px;
-      border: 1px solid rgba(0,0,0,0.12);
-      border-radius: 12px;
-      outline: none;
-      background: rgba(255,255,255,0.95);
-    }
-
-    button{
-      padding: 9px 10px;
-      border-radius: 12px;
-      border: 1px solid rgba(0,0,0,0.12);
-      background: rgba(255,255,255,0.95);
-      cursor: pointer;
-      box-shadow: 0 6px 0 rgba(0,0,0,0.08);
-      transform: translateY(0);
-      transition: transform 120ms ease, box-shadow 120ms ease;
-      font-weight: 700;
-    }
-    button:hover{ transform: translateY(-1px); box-shadow: 0 8px 0 rgba(0,0,0,0.10); }
-    button:active{ transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.12); }
-
-    label{
-      display:flex;
-      align-items:center;
-      gap: 8px;
-      font-size: 13px;
-      color: #24112a;
-      user-select: none;
-    }
-
-    input[type="range"]{ width: 100%; }
-
-    .meta{
-      display:flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      align-items:center;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .pill{
-      display:inline-flex;
-      gap: 6px;
-      align-items:center;
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(0,0,0,0.08);
-      background: rgba(255,255,255,0.95);
-    }
-
-    .ok{ color: #0a7; font-weight: 800; }
-    .warn{ color: #b60; font-weight: 800; }
-
-    /* ========= DIGEST ========= */
+    /* DIGEST BIG + READABLE */
     .digestWrap{
       flex: 1;
+      min-height: 0;
       display:flex;
       flex-direction: column;
-      min-height: 0;
+      background: rgba(0,0,0,0.12);
     }
 
     .digestHeader{
       padding: 10px 14px;
-      border-bottom: 1px solid rgba(0,0,0,0.06);
-      background: linear-gradient(90deg, rgba(255,79,216,0.08), rgba(109,255,253,0.08));
-      display:flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-    .digestHeader strong{
-      font-size: 13px;
-    }
-
-    .digestBox{
-      flex: 1;
-      min-height: 0;
-      padding: 12px 14px;
-      overflow: auto;
-      white-space: pre-wrap;
-      font-size: 12.5px;
-      line-height: 1.35;
-      background: linear-gradient(180deg, rgba(255,240,255,0.98), rgba(235,255,255,0.92));
-      border-top: 2px dashed rgba(120, 0, 255, 0.18);
-    }
-
-    /* ========= MAP HEADER ========= */
-    .mapTop{
-      padding: 10px 12px;
-      background: rgba(255,255,255,0.10);
+      border-bottom: 1px solid var(--line);
       display:flex;
       align-items:center;
       justify-content: space-between;
       gap: 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.10);
-      color: rgba(255,255,255,0.90);
+      background: rgba(0,0,0,0.30);
+      position: sticky;
+      top: 0;
+      z-index: 5;
     }
-
-    .mapTop .hype{
-      font-weight: 900;
-      letter-spacing: 0.4px;
-      display:flex;
-      align-items:center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .mapTop .tiny{
-      opacity: 0.85;
+    .digestHeader strong{
+      text-transform: uppercase;
+      letter-spacing: 1px;
       font-size: 12px;
     }
+    .stamp{ color: rgba(243,245,255,0.65); font-size: 11px; }
 
-    /* Leaflet control vibe */
-    .leaflet-control-zoom a{
-      background: rgba(255,255,255,0.92) !important;
-      border: 1px solid rgba(255,0,255,0.25) !important;
-      box-shadow: 0 0 18px rgba(0,255,255,0.15);
+    .digestBox{
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.55;
+      white-space: pre-wrap;
     }
 
-    /* Responsive */
-    @media (max-width: 980px){
+    /* Make key sections stand out */
+    .digestBox .k{ color: var(--warn); font-weight: 900; }
+    .digestBox .g{ color: var(--ok); font-weight: 900; }
+    .digestBox .r{ color: var(--danger); font-weight: 900; }
+
+    /* MAP AREA SMALLER */
+    .mapTop{
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      background: rgba(0,0,0,0.35);
+      color: rgba(243,245,255,0.88);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 900;
+    }
+
+    #map{
+      height: 360px;  /* <— smaller map */
+      width: 100%;
+    }
+
+    .mapBottom{
+      flex: 1;
+      padding: 12px;
+      color: rgba(243,245,255,0.7);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .mapBottom b{ color: rgba(243,245,255,0.95); }
+
+    /* Leaflet controls vibe */
+    .leaflet-control-zoom a{
+      background: rgba(0,0,0,0.55) !important;
+      color: var(--ink) !important;
+      border: 1px solid rgba(255,255,255,0.18) !important;
+      box-shadow: 0 0 18px rgba(255,42,42,0.12);
+    }
+
+    a.caseLink{
+      color: #9efcff;
+      text-decoration: underline;
+      font-weight: 900;
+    }
+
+    @media (max-width: 1060px){
       .app{ grid-template-columns: 1fr; }
-      .right{ height: 48vh; }
-      #map{ min-height: 280px; }
+      #map{ height: 320px; }
     }
   </style>
 </head>
 
 <body>
   <div class="app">
-    <!-- LEFT: CONTROLS + DIGEST -->
+    <!-- LEFT -->
     <section class="left">
       <div class="header">
-        <div class="title">
-          <h1>
-            <span>Let Me Speak To Your Manager</span>
-            <span class="chip" id="shownBadge">0 pins</span>
-          </h1>
-          <p class="subtitle">
-            Hyper-local 311 drama detector. Drag Karen HQ to your exact roof. Daily digest below.
-          </p>
-          <div class="meta">
-            <span class="pill">😤 Chaos Meter: <span id="chaosMeter" class="warn">calculating…</span></span>
-            <span class="pill">📍 Radius: <span id="radiusLabel">1.00</span> mi</span>
-          </div>
+        <h1 class="h1">
+          🚨 Emergency Karen Broadcast System
+          <span class="tag" id="pinTag">0 PINS</span>
+          <span class="tag">🚨🚨🚨</span>
+        </h1>
+        <div class="ticker" id="ticker">
+          “WE ARE EXPERIENCING ELEVATED ENTITLEMENT LEVELS IN YOUR AREA.”
         </div>
 
-        <div class="karen" title="Karen (Manager-Seeking Variant)">
-          <div class="bob"></div>
-          <div class="flip"></div>
-          <div class="bang"></div>
-          <div class="face">
-            <div class="eyes">
-              <div class="eye"></div>
-              <div class="eye"></div>
-            </div>
-            <div class="mouth"></div>
+        <div class="chaosWrap">
+          <div class="chaosTop">
+            <span>Chaos Meter</span>
+            <span id="radiusMini">Radius: 1.00 mi</span>
           </div>
-          <div class="badge">KAREN</div>
+          <div class="chaosValue">
+            <span class="count" id="chaosCount">0</span>
+            <span id="chaosLabel">blessed silence</span>
+          </div>
+          <div class="bar"><div id="chaosBar"></div></div>
         </div>
       </div>
 
@@ -370,47 +328,53 @@
         <div class="row">
           <button id="refreshBtn">Refresh</button>
           <button id="recenterBtn">Recenter</button>
-          <button id="clearBtn">Clear pins</button>
+          <button id="clearBtn">Clear</button>
         </div>
 
         <div class="row">
-          <input id="search" type="text" placeholder="Search keyword (address/type/case #)" />
+          <input id="search" type="text" placeholder="Search (address / case # / type)" />
           <button id="findBtn">Find</button>
         </div>
 
         <label>
+          <span>Radius</span>
           <input id="radius" type="range" min="0.25" max="2.0" step="0.25" value="1.0" />
+          <span id="radiusLabel">1.00</span> mi
         </label>
 
         <label><input type="checkbox" id="parkingOnly" checked> 🚗 Parking-ish only</label>
         <label><input type="checkbox" id="excludeTraffic" checked> 🚦 Hide traffic spam</label>
 
-        <div class="meta" id="diag">Loading…</div>
+        <div class="metaLine" id="diag">Loading…</div>
       </div>
 
       <div class="digestWrap">
         <div class="digestHeader">
           <strong>📬 Daily Digest</strong>
-          <span class="muted" id="digestStamp">—</span>
+          <span class="stamp" id="digestStamp">—</span>
         </div>
-        <div class="digestBox" id="digestBox">Daily digest will appear here.</div>
+        <div class="digestBox" id="digestBox">Digest will appear here.</div>
       </div>
     </section>
 
-    <!-- RIGHT: MAP -->
+    <!-- RIGHT -->
     <section class="right">
-      <div class="mapTop">
-        <div class="hype">🗺️ Complaint Heat (but like… petty)</div>
-        <div class="tiny">Tip: click a dot for receipts</div>
-      </div>
+      <div class="mapTop">🚨 Situation Map (small but petty)</div>
       <div id="map"></div>
+      <div class="mapBottom">
+        <b>Receipts mode:</b> Click a siren dot → popup shows details + a link.
+        <br><br>
+        <span style="opacity:0.8">
+          If ArcGIS doesn’t provide a direct case URL, the link opens Houston’s “check case status” page (search by case #).
+        </span>
+      </div>
     </section>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
-    // ========= HQ defaults (dragging overrides & persists) =========
+    // ===== HQ defaults =====
     const DEFAULT_HOME = { lat: 29.828103, lon: -95.426829 };
     const $ = (id) => document.getElementById(id);
 
@@ -425,7 +389,7 @@
     }
     function saveHome(lat, lon){ localStorage.setItem("karen_home", JSON.stringify({lat, lon})); }
 
-    // ========= Daily digest snapshot storage =========
+    // ===== Daily digest snapshot =====
     const SNAP_KEY = "karen_daily_snap_v1";
     const LAST_DATE_KEY = "karen_daily_date_v1";
 
@@ -437,12 +401,11 @@
       return `${y}-${m}-${day}`;
     }
 
-    // ========= Filters =========
+    // ===== Filters =====
     function isTrafficSpam(text){
       const t=(text||"").toLowerCase();
       return t.includes("traffic signal") || t.includes("traffic sign") || t.includes("traffic signals") || t.includes("traffic signs") || t.includes("traffic");
     }
-
     function isParkingish(text){
       const t=(text||"").toLowerCase();
       return (
@@ -463,16 +426,30 @@
     function makeCaseId(a){
       return String(a.CaseNumber365 || a.CaseNumber || a.ObjectID || (a.IncidentAddress||"") + "::" + (a.CreatedDate||""));
     }
-
     function normStatus(a){
       return (a.StateCodeName || a.Status || "").toLowerCase().trim();
     }
-
     function isOpenish(status){
       return status.includes("active") || status.includes("open") || status.includes("routed") || status.includes("acknowledged");
     }
 
-    // ========= Map =========
+    // ===== Case links =====
+    // If ArcGIS doesn't provide a URL, we can send user to case status search page.
+    // NOTE: This is the public portal root; the user can paste case # there if needed.
+    const CASE_STATUS_SEARCH_URL = "https://houston311.powerappsportals.us/en-US/checkcasestatus/";
+
+    function buildCaseLink(a){
+      // Best: if we ever get a direct guid field, we could link to /casedetail/?id=...
+      // In this layer we usually have CaseNumber365 / CaseNumber, not the guid.
+      const cn = a.CaseNumber365 || a.CaseNumber;
+      if (cn) {
+        // Link to the check status page with a hint (we can't guarantee query params exist)
+        return { text: `Open case status page (copy case # ${cn})`, url: CASE_STATUS_SEARCH_URL };
+      }
+      return { text: "Open case status page", url: CASE_STATUS_SEARCH_URL };
+    }
+
+    // ===== Map =====
     let HOME = loadHome();
     let radiusMiles = 1.0;
 
@@ -484,7 +461,7 @@
       .bindPopup("🏠 Karen HQ (drag me onto the exact roof)")
       .openPopup();
 
-    const radiusCircle = L.circle([HOME.lat, HOME.lon], { radius: radiusMiles*1609.34, fillOpacity:0.05 }).addTo(map);
+    const radiusCircle = L.circle([HOME.lat, HOME.lon], { radius: radiusMiles*1609.34, fillOpacity:0.06 }).addTo(map);
 
     hqMarker.on("dragend", async () => {
       const ll = hqMarker.getLatLng();
@@ -495,14 +472,14 @@
       await refresh();
     });
 
-    // ========= Pins =========
+    // ===== Pins =====
     let latest = [];
     let markers = new Map();
 
     function clearPins(){
       for(const m of markers.values()) map.removeLayer(m);
       markers.clear();
-      updateBadges();
+      updateChaos();
     }
 
     function addPin(a){
@@ -517,28 +494,59 @@
       const status = a.StateCodeName || a.Status || "Active";
       const address = a.IncidentAddress || "";
 
-      const marker = L.circleMarker([lat, lon], { radius: 8 })
-        .addTo(map)
-        .bindPopup(
-          `<b>${title}</b><br>` +
-          `Status: ${status}<br>` +
-          `${address}<br>` +
-          `<span style="font-size:12px;color:#666">CaseNumber365: ${a.CaseNumber365||""} | CaseNumber: ${a.CaseNumber||""}</span>`
-        );
+      const link = buildCaseLink(a);
+
+      // Siren-style marker: emoji inside a DivIcon
+      const icon = L.divIcon({
+        className: "",
+        html: `<div style="
+          width: 26px; height: 26px; display:grid; place-items:center;
+          border-radius: 999px;
+          background: rgba(0,0,0,0.55);
+          border: 1px solid rgba(255,255,255,0.18);
+          box-shadow: 0 0 18px rgba(255,42,42,0.25);
+          font-size: 16px;
+        ">🚨</div>`,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13]
+      });
+
+      const marker = L.marker([lat, lon], { icon }).addTo(map);
+
+      // Popup with a link
+      marker.bindPopup(
+        `<div style="font-family: ui-monospace, Menlo, Consolas, monospace; line-height:1.35;">
+          <div style="font-weight:900; letter-spacing:0.6px; text-transform:uppercase;">${title}</div>
+          <div>Status: <b>${status}</b></div>
+          <div style="margin-top:6px;">${address}</div>
+          <div style="margin-top:8px;">
+            <a class="caseLink" href="${link.url}" target="_blank" rel="noopener noreferrer">${link.text}</a>
+          </div>
+          <div style="margin-top:8px; color:rgba(243,245,255,0.75); font-size:12px;">
+            Case #365: ${a.CaseNumber365 || "—"} | Case #: ${a.CaseNumber || "—"}
+          </div>
+        </div>`
+      );
 
       markers.set(id, marker);
     }
 
-    function updateBadges(){
+    function updateChaos(){
       const n = markers.size;
-      $("shownBadge").textContent = `${n} pins`;
+      $("pinTag").textContent = `${n} PINS`;
 
-      const level =
-        n === 0 ? "😇 blessed" :
-        n <= 2 ? "👀 sus" :
-        n <= 6 ? "😤 spicy" :
-        n <= 12 ? "🚨 unhinged" : "🧨 full Karen storm";
-      $("chaosMeter").textContent = `${level} (${n})`;
+      const label =
+        n === 0 ? "✅ ALL QUIET. NO MANAGERS SUMMONED." :
+        n <= 2 ? "👀 LOW-GRADE ENTITLEMENT DETECTED." :
+        n <= 6 ? "😤 ELEVATED COMPLAINT ACTIVITY." :
+        n <= 12 ? "🚨 SEV-1 KAREN OUTBREAK." : "🧨 FULL KAREN STORM. SEEK SHELTER.";
+
+      $("chaosCount").textContent = String(n);
+      $("chaosLabel").textContent = label;
+
+      // Scale bar 0..20+ => 0..100%
+      const pct = Math.min(100, Math.round((n / 20) * 100));
+      $("chaosBar").style.width = pct + "%";
     }
 
     function render(){
@@ -554,7 +562,7 @@
         addPin(a);
       }
 
-      updateBadges();
+      updateChaos();
     }
 
     function buildArcgisUrl(){
@@ -566,8 +574,6 @@
       const minLon = (HOME.lon - lonPad).toFixed(6);
       const maxLon = (HOME.lon + lonPad).toFixed(6);
 
-      // Not filtering Active here so digest can detect closures if present;
-      // your UI filtering is handled client-side.
       const where =
         `Latitude >= ${minLat} AND Latitude <= ${maxLat} AND Longitude >= ${minLon} AND Longitude <= ${maxLon}`;
 
@@ -579,13 +585,32 @@
       );
     }
 
+    function formatDigestHTML(text){
+      // Convert plain digest to styled HTML for readability
+      // We color key headers and keep line breaks.
+      const esc = (s) => s
+        .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+
+      const lines = esc(text).split("\n");
+      const out = lines.map(line => {
+        if (line.startsWith("📬")) return `<div class="k">${line}</div>`;
+        if (line.startsWith("✅")) return `<div class="g">${line}</div>`;
+        if (line.startsWith("🚗")) return `<div class="k">${line}</div>`;
+        if (line.startsWith("🔁")) return `<div class="k">${line}</div>`;
+        if (line.startsWith("🆕")) return `<div class="k">${line}</div>`;
+        if (line.startsWith("👻")) return `<div class="r">${line}</div>`;
+        if (line.startsWith("•")) return `<div style="margin-left:10px">${line}</div>`;
+        return `<div>${line}</div>`;
+      }).join("");
+      return out;
+    }
+
     function buildDailyDigest(currentParkingCases){
       const today = todayLocalYYYYMMDD();
       const lastDate = localStorage.getItem(LAST_DATE_KEY);
       const prevSnapRaw = localStorage.getItem(SNAP_KEY);
       const prevSnap = prevSnapRaw ? JSON.parse(prevSnapRaw) : {}; // {id: status}
 
-      // today snapshot
       const todaySnap = {};
       for (const c of currentParkingCases) todaySnap[c.id] = c.status;
 
@@ -598,7 +623,6 @@
         else if (prevSnap[c.id] !== c.status) changed.push({ ...c, before: prevSnap[c.id] });
       }
 
-      // Missing cases (were in prev, not in today): likely closed/removed/aged out
       const missing = [];
       for (const prevId of Object.keys(prevSnap)) {
         if (!todaySnap[prevId]) missing.push(prevId);
@@ -613,22 +637,22 @@
       } else {
         if (openNow.length) {
           out += `🚗 Open parking-ish near HQ: ${openNow.length}\n`;
-          openNow.slice(0, 8).forEach(c => out += `• ${c.type} — ${c.address} (${c.status})\n`);
-          if (openNow.length > 8) out += `…and ${openNow.length - 8} more\n`;
+          openNow.slice(0, 10).forEach(c => out += `• ${c.type} — ${c.address} (${c.status})\n`);
+          if (openNow.length > 10) out += `…and ${openNow.length - 10} more\n`;
           out += "\n";
         }
 
         if (changed.length) {
           out += `🔁 Status changes: ${changed.length}\n`;
-          changed.slice(0, 8).forEach(c => out += `• ${c.type} — ${c.address} (${c.before} → ${c.status})\n`);
-          if (changed.length > 8) out += `…and ${changed.length - 8} more\n`;
+          changed.slice(0, 10).forEach(c => out += `• ${c.type} — ${c.address} (${c.before} → ${c.status})\n`);
+          if (changed.length > 10) out += `…and ${changed.length - 10} more\n`;
           out += "\n";
         }
 
         if (newlySeen.length) {
           out += `🆕 New since last digest: ${newlySeen.length}\n`;
-          newlySeen.slice(0, 8).forEach(c => out += `• ${c.type} — ${c.address} (${c.status})\n`);
-          if (newlySeen.length > 8) out += `…and ${newlySeen.length - 8} more\n`;
+          newlySeen.slice(0, 10).forEach(c => out += `• ${c.type} — ${c.address} (${c.status})\n`);
+          if (newlySeen.length > 10) out += `…and ${newlySeen.length - 10} more\n`;
           out += "\n";
         }
 
@@ -638,7 +662,6 @@
         }
       }
 
-      // Save snapshot for tomorrow
       localStorage.setItem(SNAP_KEY, JSON.stringify(todaySnap));
       localStorage.setItem(LAST_DATE_KEY, today);
 
@@ -656,7 +679,6 @@
         const all = feats.map(f => f.attributes || {});
         latest = all;
 
-        // Digest is always built from parking-ish, regardless of UI toggles
         const excludeTraffic = $("excludeTraffic").checked;
 
         const parkingCases = all
@@ -670,14 +692,15 @@
           }));
 
         const digestText = buildDailyDigest(parkingCases);
-        $("digestBox").textContent = digestText;
+        $("digestBox").innerHTML = formatDigestHTML(digestText);
         $("digestStamp").textContent = `Last run: ${new Date().toLocaleString()}`;
+
+        $("radiusMini").textContent = `Radius: ${radiusMiles.toFixed(2)} mi`;
 
         const sampleTypes = all.slice(0,6).map(a => a.CaseType).filter(Boolean).join(" | ");
         $("diag").innerHTML =
-          `<span class="pill">ArcGIS returned <b>${feats.length}</b> nearby cases</span>` +
-          `<span class="pill">HQ: ${HOME.lat.toFixed(5)}, ${HOME.lon.toFixed(5)}</span>` +
-          `<span class="pill">Sample: ${sampleTypes || "(none)"}</span>`;
+          `ArcGIS returned <b>${feats.length}</b> in bbox around HQ.<br>` +
+          `HQ: ${HOME.lat.toFixed(5)}, ${HOME.lon.toFixed(5)} · Sample: ${sampleTypes || "(none)"}`;
 
         render();
       }catch(e){
@@ -704,18 +727,21 @@
 
       const lat = Number(hit.Latitude), lon = Number(hit.Longitude);
       map.setView([lat, lon], 17);
-      const spot = L.circleMarker([lat, lon], { radius: 14 }).addTo(map)
-        .bindPopup("🎯 FOUND<br><b>" + (hit.CaseType||"") + "</b><br>" + (hit.IncidentAddress||""))
-        .openPopup();
-      setTimeout(() => map.removeLayer(spot), 8000);
+
+      // Open popup by matching marker id
+      const id = makeCaseId(hit);
+      const m = markers.get(id);
+      if (m) m.openPopup();
     }
 
-    // ========= UI =========
+    // ===== UI wiring =====
     $("radiusLabel").textContent = radiusMiles.toFixed(2);
+    $("radiusMini").textContent = `Radius: ${radiusMiles.toFixed(2)} mi`;
 
     $("radius").addEventListener("input", async (e) => {
       radiusMiles = Number(e.target.value);
       $("radiusLabel").textContent = radiusMiles.toFixed(2);
+      $("radiusMini").textContent = `Radius: ${radiusMiles.toFixed(2)} mi`;
       radiusCircle.setRadius(radiusMiles * 1609.34);
       await refresh();
     });
@@ -741,9 +767,8 @@
     $("search").addEventListener("keydown", (e) => { if(e.key==="Enter") find(); });
 
     // init
-    updateBadges();
+    updateChaos();
     refresh();
   </script>
 </body>
 </html>
-
