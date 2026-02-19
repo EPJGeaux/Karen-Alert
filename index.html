@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Whispers from the Plaza</title>
+  <title>Whispers from the Curb</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
@@ -24,7 +24,6 @@
     html, body { height: 100%; margin: 0; background: var(--paper); color: var(--ink); }
     body{
       display:flex; justify-content:center;
-      /* subtle paper texture */
       background:
         radial-gradient(900px 500px at 20% 10%, rgba(180,138,60,0.06), transparent 60%),
         radial-gradient(900px 500px at 85% 30%, rgba(122,93,43,0.05), transparent 55%),
@@ -39,7 +38,6 @@
       font-family: Georgia, "Times New Roman", serif;
     }
 
-    /* Masthead */
     .masthead{ text-align:center; margin-bottom: 10px; }
     .masthead h1{
       margin: 0;
@@ -74,12 +72,7 @@
       font-size: 18px;
     }
 
-    /* Layout blocks */
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-    }
+    .grid{ display:grid; grid-template-columns: 1fr; gap: 14px; }
 
     .card{
       background: rgba(255,255,255,0.85);
@@ -101,7 +94,6 @@
       font-size: 13px;
     }
 
-    /* Chaos banner */
     .chaos{
       padding: 16px 18px;
       text-align: center;
@@ -143,170 +135,41 @@
       transition: width 260ms ease;
     }
 
-    /* Map */
-    #map{
-      height: 320px;
-      width: 100%;
-    }
-    .leaflet-control-zoom a{
-      background: #fff !important;
-      border: 1px solid var(--line) !important;
-    }
+    #map{ height: 320px; width: 100%; }
+    .leaflet-control-zoom a{ background: #fff !important; border: 1px solid var(--line) !important; }
 
-    /* Controls */
     .controls{
-      display:flex;
-      gap: 10px;
-      flex-wrap: wrap;
+      display:flex; gap: 10px; flex-wrap: wrap;
       padding: 10px 12px;
       border-top: 1px solid var(--line);
       background: rgba(255,255,255,0.85);
       align-items:center;
     }
-    .controls button,
-    .controls input{
+    .controls button, .controls input{
       font-family: inherit;
       padding: 8px 10px;
       border-radius: 10px;
       border: 1px solid var(--line);
       background: #fff;
     }
-    .controls button{
-      cursor: pointer;
-      font-weight: 700;
-    }
-    .controls button:hover{ filter: brightness(1.02); }
+    .controls button{ cursor:pointer; font-weight: 700; }
     .controls label{
-      display:inline-flex;
-      align-items:center;
-      gap: 7px;
-      font-size: 13px;
-      color: var(--muted);
-      user-select:none;
+      display:inline-flex; align-items:center; gap: 7px;
+      font-size: 13px; color: var(--muted); user-select:none;
     }
     .controls input[type="range"]{ width: 170px; }
-    .controls .mini{
-      color: var(--muted);
-      font-size: 12px;
-    }
+    .controls .mini{ color: var(--muted); font-size: 12px; }
 
-    /* Feature block */
-    .feature{
-      padding: 14px 16px;
-      background: rgba(255,255,255,0.86);
-    }
-    .feature h2{
-      margin: 0 0 10px;
-      font-size: 20px;
-      display:flex;
-      align-items: baseline;
-      gap: 10px;
-    }
-    .stamp{
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: normal;
-      font-style: italic;
-    }
-    .feature .lede{
-      margin: 0;
-      font-size: 15px;
-      line-height: 1.55;
-      color: #2a2622;
-    }
+    .feature{ padding: 14px 16px; background: rgba(255,255,255,0.86); }
+    .feature h2{ margin:0 0 10px; font-size: 20px; display:flex; gap:10px; align-items: baseline; }
+    .stamp{ font-size: 12px; color: var(--muted); font-weight: normal; font-style: italic; }
+    .feature .lede{ margin:0; font-size: 15px; line-height: 1.55; color: #2a2622; }
     .feature .lede em{ color: var(--accent2); font-style: italic; }
+    .tinyNote{ font-size: 12px; color: var(--muted); font-style: italic; margin-top: 6px; }
 
-    /* Digest */
-    .digest{
-      padding: 16px 18px;
-    }
-    .digest h2{
-      margin: 0 0 10px;
-      font-size: 22px;
-      display:flex;
-      gap:10px;
-      align-items: baseline;
-    }
-    .digest .sub{
-      color: var(--muted);
-      font-size: 12px;
-      font-style: italic;
-    }
-    .digestContent{
-      background: rgba(255,255,255,0.60);
-      border: 1px solid rgba(230,226,219,0.85);
-      border-radius: 14px;
-      padding: 14px 14px;
-      line-height: 1.65;
-      color: #2a2622;
-    }
-    .digestContent p{
-      margin: 0 0 10px;
-    }
-    .digestContent p:last-child{ margin-bottom: 0; }
-
-    /* Drop cap on first paragraph */
-    .digestContent p:first-child::first-letter{
-      float:left;
-      font-size: 44px;
-      line-height: 1;
-      padding-right: 10px;
-      padding-top: 4px;
-      color: var(--accent);
-      font-weight: 800;
-    }
-
-    .list{
-      margin: 10px 0 0;
-      padding-left: 18px;
-    }
-    .list li{ margin: 5px 0; }
-    .muted{ color: var(--muted); }
-
-    /* Archive */
-    details.archive{
-      margin-top: 14px;
-      border-top: 1px solid rgba(230,226,219,0.9);
-      padding-top: 12px;
-    }
-    details.archive summary{
-      cursor:pointer;
-      font-weight: 700;
-      color: var(--accent2);
-    }
-    .edition{
-      margin-top: 10px;
-      padding: 12px 12px;
-      border: 1px solid rgba(230,226,219,0.85);
-      border-radius: 14px;
-      background: rgba(255,255,255,0.65);
-    }
-    .edition .edTitle{
-      font-weight: 800;
-      color: #2a2622;
-      margin-bottom: 6px;
-    }
-    .edition .edText{
-      white-space: pre-wrap;
-      line-height: 1.55;
-      font-size: 13.5px;
-      color: #2a2622;
-      margin: 0;
-    }
-
-    /* Social Register */
-    .register{
-      padding: 14px 16px;
-    }
-    .register h2{
-      margin: 0 0 8px;
-      font-size: 18px;
-    }
-    .twoCol{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
+    .register{ padding: 14px 16px; }
+    .register h2{ margin:0 0 8px; font-size: 18px; }
+    .twoCol{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     @media (max-width: 860px){
       .twoCol{ grid-template-columns: 1fr; }
       .masthead h1{ font-size: 44px; }
@@ -324,32 +187,41 @@
       text-transform: uppercase;
       letter-spacing: 1px;
     }
-    .box ol{
-      margin: 0;
-      padding-left: 18px;
+    .box ol{ margin:0; padding-left: 18px; color:#2a2622; line-height: 1.55; }
+
+    .digest{ padding: 16px 18px; }
+    .digest h2{ margin:0 0 10px; font-size: 22px; display:flex; gap:10px; align-items: baseline; }
+    .digest .sub{ color: var(--muted); font-size: 12px; font-style: italic; }
+    .digestContent{
+      background: rgba(255,255,255,0.60);
+      border: 1px solid rgba(230,226,219,0.85);
+      border-radius: 14px;
+      padding: 14px 14px;
+      line-height: 1.65;
       color: #2a2622;
-      line-height: 1.55;
     }
+    .digestContent p{ margin: 0 0 10px; }
+    .digestContent p:last-child{ margin-bottom: 0; }
+    .digestContent p:first-child::first-letter{
+      float:left; font-size: 44px; line-height: 1;
+      padding-right: 10px; padding-top: 4px;
+      color: var(--accent); font-weight: 800;
+    }
+    details.archive{ margin-top: 14px; border-top: 1px solid rgba(230,226,219,0.9); padding-top: 12px; }
+    details.archive summary{ cursor:pointer; font-weight: 700; color: var(--accent2); }
+    .edition{
+      margin-top: 10px;
+      padding: 12px 12px;
+      border: 1px solid rgba(230,226,219,0.85);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.65);
+    }
+    .edition .edTitle{ font-weight: 800; color:#2a2622; margin-bottom: 6px; }
+    .edition .edText{ white-space: pre-wrap; line-height:1.55; font-size: 13.5px; color:#2a2622; margin:0; }
 
-    a.caseLink{
-      color: var(--accent2);
-      font-weight: 800;
-      text-decoration: underline;
-    }
-    .tinyNote{
-      font-size: 12px;
-      color: var(--muted);
-      font-style: italic;
-      margin-top: 6px;
-    }
+    a.caseLink{ color: var(--accent2); font-weight: 800; text-decoration: underline; }
 
-    /* Small “sound” toggle */
-    .soundToggle{
-      display:inline-flex;
-      align-items:center;
-      gap: 8px;
-      margin-left: auto;
-    }
+    .soundToggle label{ gap:6px; color:var(--muted); font-size:12px; }
     .soundToggle input{ transform: translateY(1px); }
   </style>
 </head>
@@ -357,13 +229,12 @@
 <body>
   <div class="page">
     <div class="masthead">
-      <h1>Whispers from the Plaza</h1>
+      <h1>Whispers from the Curb</h1>
       <div class="kicker">Dearest reader, one’s neighborhood rarely rests quietly…</div>
     </div>
 
     <div class="ornament"></div>
 
-    <!-- CHAOS -->
     <div class="card">
       <div class="chaos">
         <strong>Current State of Affairs</strong>
@@ -374,14 +245,13 @@
     </div>
 
     <div class="grid">
-      <!-- MAP -->
       <div class="card">
         <div class="cardHeader">
           <span>🗺️ The Situation Map</span>
           <span class="soundToggle">
-            <label style="gap:6px; color:var(--muted); font-size:12px;">
+            <label>
               <input type="checkbox" id="soundOn" />
-              🎻 discreet music
+              🎻 discreet chimes
             </label>
           </span>
         </div>
@@ -402,18 +272,14 @@
         </div>
       </div>
 
-      <!-- FEATURED SCANDAL -->
       <div class="card">
         <div class="feature">
           <h2>👀 All Eyes Upon… <span class="stamp" id="featureStamp">—</span></h2>
-          <p class="lede" id="featureText">
-            Our columnist awaits today’s most conspicuous curbside affair…
-          </p>
+          <p class="lede" id="featureText">Our columnist awaits today’s most conspicuous curbside affair…</p>
           <div class="tinyNote" id="featureNote"></div>
         </div>
       </div>
 
-      <!-- SOCIAL REGISTER -->
       <div class="card">
         <div class="register">
           <h2>👒 The Social Register</h2>
@@ -432,7 +298,6 @@
         </div>
       </div>
 
-      <!-- DIGEST + ARCHIVE -->
       <div class="card">
         <div class="digest">
           <h2>📰 The Daily Dispatch <span class="sub" id="stamp">—</span></h2>
@@ -455,18 +320,15 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // ========= SETTINGS =========
       const DEFAULT_HOME = { lat: 29.828103, lon: -95.426829 };
       const CASE_STATUS_URL = "https://houston311.powerappsportals.us/en-US/checkcasestatus/";
       const $ = (id) => document.getElementById(id);
 
-      // Local storage keys
       const HQ_KEY = "whistledown_hq_v2";
-      const ARCHIVE_KEY = "whistledown_archive_v1"; // { "YYYY-MM-DD": {text, createdAt} }
-      const SNAP_KEY = "whistledown_daily_snap_v1"; // { caseId: status }
+      const ARCHIVE_KEY = "whistledown_archive_v1";
+      const SNAP_KEY = "whistledown_daily_snap_v1";
       const SNAP_DATE_KEY = "whistledown_snap_date_v1";
 
-      // ========= HELPERS =========
       function todayLocalYYYYMMDD(){
         const d = new Date();
         const y = d.getFullYear();
@@ -520,8 +382,6 @@
       }
 
       function safeText(s){ return String(s || "").replace(/[<>]/g, ""); }
-
-      // ========= WHISTLEDOWN PROSE =========
       function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
 
       function whistledownify(caseType, address, status){
@@ -565,7 +425,6 @@
         return "Society is in shambles. Even the Queen would raise an eyebrow.";
       }
 
-      // ========= ARCHIVE =========
       function loadArchive(){
         const raw = localStorage.getItem(ARCHIVE_KEY);
         if(!raw) return {};
@@ -574,11 +433,9 @@
       function saveArchive(obj){
         localStorage.setItem(ARCHIVE_KEY, JSON.stringify(obj));
       }
-
       function renderArchive(){
         const arch = loadArchive();
         const keys = Object.keys(arch).sort().reverse();
-
         const host = $("archiveList");
         host.innerHTML = "";
 
@@ -599,7 +456,6 @@
         }
       }
 
-      // ========= SNAPSHOT (for change detection) =========
       function loadSnap(){
         const raw = localStorage.getItem(SNAP_KEY);
         if(!raw) return {};
@@ -609,81 +465,49 @@
         localStorage.setItem(SNAP_KEY, JSON.stringify(obj));
       }
 
-      // ========= DISCREET MUSIC (WebAudio) =========
+      // ======== BETTER SOUND: tiny chimes only (no drone) ========
       let audioCtx = null;
-      let drone = null;
-      function startMusic(){
-        try{
-          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          if (drone) return;
-
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          const filter = audioCtx.createBiquadFilter();
-
-          osc.type = "sine";
-          osc.frequency.value = 196; // G3-ish
-          filter.type = "lowpass";
-          filter.frequency.value = 600;
-
-          gain.gain.value = 0.00001; // start silent
-
-          osc.connect(filter);
-          filter.connect(gain);
-          gain.connect(audioCtx.destination);
-
-          osc.start();
-          drone = { osc, gain };
-
-          // fade in gently
-          const now = audioCtx.currentTime;
-          gain.gain.setValueAtTime(0.00001, now);
-          gain.gain.linearRampToValueAtTime(0.010, now + 1.5);
-        }catch{}
+      function ensureAudio(){
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        return audioCtx;
       }
 
-      function stopMusic(){
-        try{
-          if (!audioCtx || !drone) return;
-          const now = audioCtx.currentTime;
-          drone.gain.gain.setValueAtTime(drone.gain.gain.value, now);
-          drone.gain.gain.linearRampToValueAtTime(0.00001, now + 0.6);
-          setTimeout(() => {
-            try{ drone.osc.stop(); }catch{}
-            drone = null;
-          }, 700);
-        }catch{}
-      }
-
-      function blipIfNew(){
-        // tiny “harp blip” for new cases (if sound enabled)
+      // a tasteful little "plucked" chime using WebAudio (triangle + fast decay)
+      function playChime(pattern = [0, 4, 7], baseHz = 392.0){ // G4 base
         if (!$("soundOn").checked) return;
         try{
-          if (!audioCtx) startMusic();
-          const ctx = audioCtx;
-          if (!ctx) return;
+          const ctx = ensureAudio();
+          const t0 = ctx.currentTime;
 
-          const o = ctx.createOscillator();
-          const g = ctx.createGain();
-          o.type = "triangle";
-          o.frequency.value = 523.25; // C5
-          g.gain.value = 0.00001;
+          pattern.forEach((semitones, i) => {
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            const f = ctx.createBiquadFilter();
 
-          o.connect(g); g.connect(ctx.destination);
-          const t = ctx.currentTime;
-          o.start(t);
-          g.gain.setValueAtTime(0.00001, t);
-          g.gain.linearRampToValueAtTime(0.04, t + 0.02);
-          g.gain.exponentialRampToValueAtTime(0.00001, t + 0.22);
-          o.stop(t + 0.25);
+            o.type = "triangle";
+            const hz = baseHz * Math.pow(2, semitones/12);
+            o.frequency.value = hz;
+
+            f.type = "lowpass";
+            f.frequency.value = 1800;
+
+            // pluck envelope
+            g.gain.setValueAtTime(0.00001, t0 + i*0.08);
+            g.gain.linearRampToValueAtTime(0.05, t0 + i*0.08 + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.00001, t0 + i*0.08 + 0.22);
+
+            o.connect(f); f.connect(g); g.connect(ctx.destination);
+            o.start(t0 + i*0.08);
+            o.stop(t0 + i*0.08 + 0.26);
+          });
         }catch{}
       }
 
-      // ========= STATE =========
+      // ======== STATE =========
       let HOME = loadHome();
       let radiusMiles = Number($("radius").value || 1.0);
 
-      // ========= MAP =========
+      // ======== MAP =========
       const map = L.map("map").setView([HOME.lat, HOME.lon], 16);
       setTimeout(() => map.invalidateSize(), 60);
 
@@ -709,7 +533,8 @@
         HOME = { lat: ll.lat, lon: ll.lng };
         saveHome(HOME.lat, HOME.lon);
         radiusCircle.setLatLng([HOME.lat, HOME.lon]);
-        await refresh();
+        playChime([0, 3, 7], 349.2); // F-ish "relocation"
+        await refresh(false);
       });
 
       let markers = new Map();
@@ -767,7 +592,6 @@
         markers.set(id, m);
       }
 
-      // ========= UI =========
       function setChaos(n){
         $("chaosCount").textContent = String(n);
         $("chaosLabel").textContent =
@@ -783,11 +607,9 @@
       function setStamp(){
         $("stamp").textContent = "Last run: " + new Date().toLocaleString();
       }
-
       function setDiag(text){
         $("diag").textContent = text;
       }
-
       function setFeature(text, note){
         $("featureText").innerHTML = text;
         $("featureStamp").textContent = "— " + new Date().toLocaleTimeString();
@@ -807,7 +629,6 @@
         }
       }
 
-      // ========= ARC GIS QUERY =========
       function buildArcgisUrl(){
         const latPad = milesToLatDeg(radiusMiles) * 1.25;
         const lonPad = milesToLonDeg(radiusMiles, HOME.lat) * 1.25;
@@ -830,15 +651,14 @@
         return "https://mycity2.houstontx.gov/pubgis01/rest/services/311/Houston311_RecentServiceRequests/FeatureServer/3/query?" + params.toString();
       }
 
-      // ========= MAIN REFRESH =========
-      async function refresh(){
+      // refresh(triggerChime = true) lets us chime on button click but not on every slider tweak
+      async function refresh(triggerChime = true){
         $("radiusLabel").textContent = radiusMiles.toFixed(2);
         radiusCircle.setRadius(radiusMiles * 1609.34);
         setStamp();
         setDiag("Gathering whispers…");
 
-        if ($("soundOn").checked) startMusic();
-        else stopMusic();
+        if (triggerChime) playChime([0, 4, 7], 392.0); // pleasant triad on refresh
 
         try{
           clearPins();
@@ -851,7 +671,6 @@
           const parkingOnly = $("parkingOnly").checked;
           const excludeTraffic = $("excludeTraffic").checked;
 
-          // Filter
           const filtered = [];
           for (const a of feats){
             const type = a.CaseType || "";
@@ -860,7 +679,6 @@
             filtered.push(a);
           }
 
-          // Pins + compute distances
           const cases = filtered.map(a => {
             const lat = Number(a.Latitude);
             const lon = Number(a.Longitude);
@@ -883,7 +701,7 @@
 
           setChaos(cases.length);
 
-          // Social register: top addresses + top types from TODAY’s set
+          // Social register
           const addrCount = new Map();
           const typeCount = new Map();
           for (const c of cases){
@@ -897,8 +715,8 @@
           renderTopList($("topAddresses"), topAddr);
           renderTopList($("topTypes"), topTyp);
 
-          // Feature: closest OPEN-ish case if any, else closest case
-          let featured = cases.find(c => isOpenish(c.status)) || cases[0];
+          // Feature
+          const featured = cases.find(c => isOpenish(c.status)) || cases[0];
           if (!featured){
             setFeature(`${whistledownIntro(0)}`, "");
           } else {
@@ -907,44 +725,33 @@
             setFeature(ft, note);
           }
 
-          // Daily digest + archive + change detection
+          // Digest + archive + change detection
           const today = todayLocalYYYYMMDD();
-          const prevDate = localStorage.getItem(SNAP_DATE_KEY);
           const prevSnap = loadSnap();
           const todaySnap = {};
 
-          // Build prose paragraphs
           const intro = whistledownIntro(cases.length);
-          const paragraphs = [];
+          const paragraphs = [intro];
 
-          paragraphs.push(intro);
+          let newCount = 0;
 
           if (cases.length === 0){
             paragraphs.push("Should any carriage misbehave, this author shall return at once.");
           } else {
-            // “New / Changed / Still open” sections
             const newOnes = [];
             const changed = [];
             const openNow = [];
 
             for (const c of cases){
               todaySnap[c.id] = c.status;
-
-              if (!prevSnap[c.id]) newOnes.push(c);
+              if (!prevSnap[c.id]) { newOnes.push(c); newCount++; }
               else if (prevSnap[c.id] !== c.status) changed.push({ ...c, before: prevSnap[c.id] });
-
               if (isOpenish(c.status)) openNow.push(c);
             }
 
-            // Missing: in prev, not in today
             const missing = [];
             for (const pid of Object.keys(prevSnap)){
               if (!todaySnap[pid]) missing.push(pid);
-            }
-
-            // Build edition text
-            if (prevDate && prevDate !== today){
-              paragraphs.push(`An editorial note: yesterday’s edition was dated <em>${prevDate}</em>. Today, we compare.`);
             }
 
             if (openNow.length){
@@ -953,11 +760,9 @@
 
             if (newOnes.length){
               paragraphs.push(`Fresh whispers have arrived (${newOnes.length}). How industrious.`);
-              // a few bullets in prose form
               const list = newOnes.slice(0, 6).map(c => `• ${whistledownify(c.type, c.address, c.status).replace(/<[^>]+>/g,"")}`);
               paragraphs.push(list.join("\n"));
               if (newOnes.length > 6) paragraphs.push(`…and ${newOnes.length - 6} more newly noted affairs.`);
-              blipIfNew();
             }
 
             if (changed.length){
@@ -977,17 +782,13 @@
             }
           }
 
-          // Render digest as paragraphs
+          // Render digest
           const digestEl = $("digestContent");
           digestEl.innerHTML = "";
           const textForArchive = [];
 
           for (const block of paragraphs){
-            // If block has bullet lines, keep it as <pre>-ish
-            if (block.includes("\n• " ) || block.startsWith("• ") || block.includes("\n")){
-              const p = document.createElement("p");
-              p.textContent = block; // keeps line breaks in CSS? not in <p>
-              // better: use <pre> inside
+            if (block.includes("\n") ){
               const pre = document.createElement("pre");
               pre.style.margin = "0 0 10px";
               pre.style.whiteSpace = "pre-wrap";
@@ -1005,22 +806,22 @@
             }
           }
 
-          // Save archive ONCE PER DAY (first run of that day)
+          // archive once per day
           const arch = loadArchive();
           if (!arch[today]){
-            arch[today] = {
-              createdAt: Date.now(),
-              text: textForArchive.join("\n\n")
-            };
+            arch[today] = { createdAt: Date.now(), text: textForArchive.join("\n\n") };
             saveArchive(arch);
           }
           renderArchive();
 
-          // Save snapshot every run
+          // save snapshot
           saveSnap(todaySnap);
           localStorage.setItem(SNAP_DATE_KEY, today);
 
           setDiag(`ArcGIS returned ${feats.length} in bbox; showing ${cases.length} after filters.`);
+
+          // chime if new cases appeared
+          if (newCount > 0) playChime([0, 7, 12], 440.0);
 
         } catch (err){
           console.error(err);
@@ -1032,26 +833,26 @@
         }
       }
 
-      // ========= EVENTS =========
-      $("refreshBtn").addEventListener("click", refresh);
-      $("parkingOnly").addEventListener("change", refresh);
-      $("excludeTraffic").addEventListener("change", refresh);
+      // ===== EVENTS =====
+      $("refreshBtn").addEventListener("click", () => refresh(true));
+      $("parkingOnly").addEventListener("change", () => refresh(false));
+      $("excludeTraffic").addEventListener("change", () => refresh(false));
 
       $("radius").addEventListener("input", (e) => {
         radiusMiles = Number(e.target.value);
         $("radiusLabel").textContent = radiusMiles.toFixed(2);
-        refresh();
+        refresh(false);
       });
 
       $("soundOn").addEventListener("change", () => {
-        if ($("soundOn").checked) startMusic();
-        else stopMusic();
+        // no continuous sound; just enables chimes
+        if ($("soundOn").checked) playChime([0, 4, 7], 392.0);
       });
 
-      // Initial render of archive & first run
+      // init
       renderArchive();
       $("radiusLabel").textContent = radiusMiles.toFixed(2);
-      refresh();
+      refresh(false);
     });
   </script>
 </body>
