@@ -3,7 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Whispers from the Curb</title>
+  <title>Whispers from the Plaza</title>
+
+  <!-- Fonts: regal cursive + elegant serif -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:wght@400;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
@@ -25,52 +30,69 @@
     body{
       display:flex; justify-content:center;
       background:
-        radial-gradient(900px 500px at 20% 10%, rgba(180,138,60,0.06), transparent 60%),
-        radial-gradient(900px 500px at 85% 30%, rgba(122,93,43,0.05), transparent 55%),
+        radial-gradient(900px 520px at 20% 10%, rgba(180,138,60,0.06), transparent 60%),
+        radial-gradient(900px 520px at 85% 30%, rgba(122,93,43,0.05), transparent 55%),
         repeating-linear-gradient(0deg, rgba(30,27,24,0.015) 0px, rgba(30,27,24,0.015) 1px, transparent 1px, transparent 7px),
         linear-gradient(180deg, var(--paper), var(--paper2));
     }
 
     .page{
       width: min(1120px, 100%);
-      padding: 28px 20px 46px;
+      padding: 30px 20px 52px;
       box-sizing: border-box;
-      font-family: Georgia, "Times New Roman", serif;
+      font-family: "Cormorant Garamond", Georgia, serif;
     }
 
+    /* Masthead */
     .masthead{ text-align:center; margin-bottom: 10px; }
-    .masthead h1{
+    .masthead .title{
       margin: 0;
-      font-size: 54px;
-      letter-spacing: 0.6px;
-      font-weight: 800;
+      font-family: "Great Vibes", cursive;
+      font-size: 64px;
+      line-height: 1.05;
+      color: #1b1714;
+      text-shadow: 0 10px 30px rgba(25,18,10,0.06);
     }
-    .masthead .kicker{
-      margin: 10px 0 0;
-      font-size: 15px;
+    .masthead .subtitle{
+      margin: 8px 0 0;
+      font-size: 16px;
       color: var(--muted);
       font-style: italic;
       line-height: 1.4;
     }
+    .masthead .dateline{
+      margin: 10px 0 0;
+      font-size: 13px;
+      color: rgba(111,106,100,0.9);
+      letter-spacing: 0.2px;
+    }
 
-    .ornament{
-      margin: 16px auto 18px;
-      width: min(720px, 95%);
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--line), transparent);
-      position: relative;
-    }
-    .ornament:after{
-      content: "❦";
-      position:absolute;
-      top: -11px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--paper);
-      padding: 0 10px;
+    /* Ornamental divider */
+    .divider{
+      margin: 18px auto 18px;
+      width: min(760px, 96%);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 14px;
       color: var(--accent);
-      font-size: 18px;
+      opacity: 0.95;
+      user-select:none;
     }
+    .divider .line{
+      height: 1px;
+      flex: 1;
+      background: linear-gradient(90deg, transparent, var(--line), transparent);
+    }
+    .divider .orn{
+      font-size: 18px;
+      letter-spacing: 2px;
+      display:flex;
+      align-items:center;
+      gap: 10px;
+    }
+    .divider .orn .sig{ font-size: 20px; }
+    .divider .orn .dot{ width: 6px; height: 6px; border-radius: 999px; background: rgba(180,138,60,0.55); }
 
     .grid{ display:grid; grid-template-columns: 1fr; gap: 14px; }
 
@@ -94,6 +116,7 @@
       font-size: 13px;
     }
 
+    /* Chaos banner */
     .chaos{
       padding: 16px 18px;
       text-align: center;
@@ -107,7 +130,7 @@
       color: var(--muted);
     }
     .chaos .count{
-      font-size: 44px;
+      font-size: 46px;
       margin-top: 8px;
       color: var(--accent);
       font-weight: 800;
@@ -115,7 +138,7 @@
     }
     .chaos .label{
       margin-top: 6px;
-      font-size: 14px;
+      font-size: 15px;
       color: var(--muted);
       font-style: italic;
     }
@@ -135,9 +158,11 @@
       transition: width 260ms ease;
     }
 
+    /* Map */
     #map{ height: 320px; width: 100%; }
     .leaflet-control-zoom a{ background: #fff !important; border: 1px solid var(--line) !important; }
 
+    /* Controls */
     .controls{
       display:flex; gap: 10px; flex-wrap: wrap;
       padding: 10px 12px;
@@ -146,33 +171,61 @@
       align-items:center;
     }
     .controls button, .controls input{
-      font-family: inherit;
+      font-family: "Cormorant Garamond", serif;
+      font-size: 15px;
       padding: 8px 10px;
       border-radius: 10px;
       border: 1px solid var(--line);
       background: #fff;
     }
-    .controls button{ cursor:pointer; font-weight: 700; }
+    .controls button{
+      cursor:pointer;
+      font-weight: 700;
+    }
     .controls label{
       display:inline-flex; align-items:center; gap: 7px;
-      font-size: 13px; color: var(--muted); user-select:none;
+      font-size: 14px; color: var(--muted); user-select:none;
     }
     .controls input[type="range"]{ width: 170px; }
-    .controls .mini{ color: var(--muted); font-size: 12px; }
+    .controls .mini{ color: var(--muted); font-size: 13px; font-style: italic; }
 
+    /* Feature */
     .feature{ padding: 14px 16px; background: rgba(255,255,255,0.86); }
-    .feature h2{ margin:0 0 10px; font-size: 20px; display:flex; gap:10px; align-items: baseline; }
-    .stamp{ font-size: 12px; color: var(--muted); font-weight: normal; font-style: italic; }
-    .feature .lede{ margin:0; font-size: 15px; line-height: 1.55; color: #2a2622; }
+    .feature h2{
+      margin:0 0 10px;
+      font-size: 21px;
+      display:flex;
+      gap:10px;
+      align-items: baseline;
+      font-weight: 700;
+    }
+    .stamp{
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: normal;
+      font-style: italic;
+    }
+    .feature .lede{
+      margin:0;
+      font-size: 16px;
+      line-height: 1.55;
+      color: #2a2622;
+    }
     .feature .lede em{ color: var(--accent2); font-style: italic; }
-    .tinyNote{ font-size: 12px; color: var(--muted); font-style: italic; margin-top: 6px; }
+    .tinyNote{
+      font-size: 13px;
+      color: var(--muted);
+      font-style: italic;
+      margin-top: 6px;
+    }
 
+    /* Social Register */
     .register{ padding: 14px 16px; }
-    .register h2{ margin:0 0 8px; font-size: 18px; }
+    .register h2{ margin:0 0 8px; font-size: 19px; font-weight: 700; }
     .twoCol{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     @media (max-width: 860px){
       .twoCol{ grid-template-columns: 1fr; }
-      .masthead h1{ font-size: 44px; }
+      .masthead .title{ font-size: 54px; }
     }
     .box{
       background: rgba(255,255,255,0.65);
@@ -182,33 +235,60 @@
     }
     .box h3{
       margin: 0 0 8px;
-      font-size: 14px;
+      font-size: 13px;
       color: var(--muted);
       text-transform: uppercase;
       letter-spacing: 1px;
+      font-weight: 700;
     }
-    .box ol{ margin:0; padding-left: 18px; color:#2a2622; line-height: 1.55; }
+    .box ol{
+      margin:0;
+      padding-left: 18px;
+      color:#2a2622;
+      line-height: 1.55;
+      font-size: 15px;
+    }
 
+    /* Digest */
     .digest{ padding: 16px 18px; }
-    .digest h2{ margin:0 0 10px; font-size: 22px; display:flex; gap:10px; align-items: baseline; }
-    .digest .sub{ color: var(--muted); font-size: 12px; font-style: italic; }
+    .digest h2{
+      margin:0 0 10px;
+      font-size: 23px;
+      display:flex;
+      gap:10px;
+      align-items: baseline;
+      font-weight: 700;
+    }
+    .digest .sub{
+      color: var(--muted);
+      font-size: 12px;
+      font-style: italic;
+      font-weight: normal;
+    }
     .digestContent{
       background: rgba(255,255,255,0.60);
       border: 1px solid rgba(230,226,219,0.85);
       border-radius: 14px;
       padding: 14px 14px;
-      line-height: 1.65;
+      line-height: 1.7;
       color: #2a2622;
+      font-size: 16px;
     }
     .digestContent p{ margin: 0 0 10px; }
     .digestContent p:last-child{ margin-bottom: 0; }
     .digestContent p:first-child::first-letter{
-      float:left; font-size: 44px; line-height: 1;
+      float:left; font-size: 46px; line-height: 1;
       padding-right: 10px; padding-top: 4px;
       color: var(--accent); font-weight: 800;
     }
+
     details.archive{ margin-top: 14px; border-top: 1px solid rgba(230,226,219,0.9); padding-top: 12px; }
-    details.archive summary{ cursor:pointer; font-weight: 700; color: var(--accent2); }
+    details.archive summary{
+      cursor:pointer;
+      font-weight: 700;
+      color: var(--accent2);
+      font-size: 15px;
+    }
     .edition{
       margin-top: 10px;
       padding: 12px 12px;
@@ -216,25 +296,46 @@
       border-radius: 14px;
       background: rgba(255,255,255,0.65);
     }
-    .edition .edTitle{ font-weight: 800; color:#2a2622; margin-bottom: 6px; }
-    .edition .edText{ white-space: pre-wrap; line-height:1.55; font-size: 13.5px; color:#2a2622; margin:0; }
+    .edition .edTitle{
+      font-weight: 800;
+      color:#2a2622;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+    .edition .edText{
+      white-space: pre-wrap;
+      line-height:1.6;
+      font-size: 15px;
+      color:#2a2622;
+      margin:0;
+    }
 
     a.caseLink{ color: var(--accent2); font-weight: 800; text-decoration: underline; }
-
-    .soundToggle label{ gap:6px; color:var(--muted); font-size:12px; }
-    .soundToggle input{ transform: translateY(1px); }
+    .muted{ color: var(--muted); }
+    .tinyFooterNote{
+      font-size: 12px;
+      color: rgba(111,106,100,0.9);
+      font-style: italic;
+      margin-top: 8px;
+    }
   </style>
 </head>
 
 <body>
   <div class="page">
     <div class="masthead">
-      <h1>Whispers from the Curb</h1>
-      <div class="kicker">Dearest reader, one’s neighborhood rarely rests quietly…</div>
+      <h1 class="title">Whispers from the Plaza</h1>
+      <div class="subtitle">Dearest reader, Shepherd Park Plaza rarely rests quietly…</div>
+      <div class="dateline" id="dateline">—</div>
     </div>
 
-    <div class="ornament"></div>
+    <div class="divider" aria-hidden="true">
+      <div class="line"></div>
+      <div class="orn"><span class="sig">❦</span><span class="dot"></span><span class="sig">❦</span></div>
+      <div class="line"></div>
+    </div>
 
+    <!-- CHAOS -->
     <div class="card">
       <div class="chaos">
         <strong>Current State of Affairs</strong>
@@ -245,15 +346,11 @@
     </div>
 
     <div class="grid">
+      <!-- MAP -->
       <div class="card">
         <div class="cardHeader">
           <span>🗺️ The Situation Map</span>
-          <span class="soundToggle">
-            <label>
-              <input type="checkbox" id="soundOn" />
-              🎻 discreet chimes
-            </label>
-          </span>
+          <span class="muted" id="radiusMini">Radius: 1.00 mi</span>
         </div>
         <div id="map"></div>
         <div class="controls">
@@ -272,6 +369,7 @@
         </div>
       </div>
 
+      <!-- FEATURE -->
       <div class="card">
         <div class="feature">
           <h2>👀 All Eyes Upon… <span class="stamp" id="featureStamp">—</span></h2>
@@ -280,6 +378,7 @@
         </div>
       </div>
 
+      <!-- SOCIAL REGISTER -->
       <div class="card">
         <div class="register">
           <h2>👒 The Social Register</h2>
@@ -287,17 +386,18 @@
             <div class="box">
               <h3>Most Mentioned Addresses</h3>
               <ol id="topAddresses"></ol>
-              <div class="tinyNote">The ton never forgets.</div>
+              <div class="tinyFooterNote">The ton never forgets.</div>
             </div>
             <div class="box">
               <h3>Most Mentioned Scandals</h3>
               <ol id="topTypes"></ol>
-              <div class="tinyNote">Some dramas simply insist upon returning.</div>
+              <div class="tinyFooterNote">Some dramas simply insist upon returning.</div>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- DIGEST -->
       <div class="card">
         <div class="digest">
           <h2>📰 The Daily Dispatch <span class="sub" id="stamp">—</span></h2>
@@ -309,7 +409,7 @@
           <details class="archive">
             <summary>Previous Editions (archived locally)</summary>
             <div id="archiveList"></div>
-            <div class="tinyNote">Stored in your browser only. Clearing site data clears the archive.</div>
+            <div class="tinyFooterNote">Stored in your browser only. Clearing site data clears the archive.</div>
           </details>
         </div>
       </div>
@@ -320,109 +420,52 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+      // ===== CONFIG =====
       const DEFAULT_HOME = { lat: 29.828103, lon: -95.426829 };
       const CASE_STATUS_URL = "https://houston311.powerappsportals.us/en-US/checkcasestatus/";
       const $ = (id) => document.getElementById(id);
 
-      const HQ_KEY = "whistledown_hq_v2";
-      const ARCHIVE_KEY = "whistledown_archive_v1";
-      const SNAP_KEY = "whistledown_daily_snap_v1";
-      const SNAP_DATE_KEY = "whistledown_snap_date_v1";
+      const HQ_KEY = "plaza_hq_v1";
+      const ARCHIVE_KEY = "plaza_archive_v1";
+      const SNAP_KEY = "plaza_daily_snap_v1";
+      const SNAP_DATE_KEY = "plaza_snap_date_v1";
 
-      function todayLocalYYYYMMDD(){
-        const d = new Date();
-        const y = d.getFullYear();
-        const m = String(d.getMonth()+1).padStart(2,"0");
-        const day = String(d.getDate()).padStart(2,"0");
-        return `${y}-${m}-${day}`;
+      // ===== REGENCY DATE FORMATTING =====
+      function ordinal(n){
+        const s = ["th","st","nd","rd"];
+        const v = n % 100;
+        return n + (s[(v-20)%10] || s[v] || s[0]);
       }
 
+      function regencyDateline(d = new Date()){
+        const weekday = d.toLocaleDateString(undefined, { weekday: "long" });
+        const month = d.toLocaleDateString(undefined, { month: "long" });
+        const day = d.getDate();
+        const year = d.getFullYear();
+        return `${weekday}, the ${ordinal(day)} day of ${month}, in the year ${year}`;
+      }
+
+      function regencyStamp(d = new Date()){
+        // shorter version for “Last run”
+        const weekday = d.toLocaleDateString(undefined, { weekday: "long" });
+        const month = d.toLocaleDateString(undefined, { month: "long" });
+        return `${weekday}, ${month} ${ordinal(d.getDate())} — ${d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}`;
+      }
+
+      $("dateline").textContent = regencyDateline();
+
+      // ===== STORAGE =====
       function loadHome(){
         const raw = localStorage.getItem(HQ_KEY);
         if(!raw) return { ...DEFAULT_HOME };
         try{
           const o = JSON.parse(raw);
           if (Number.isFinite(o.lat) && Number.isFinite(o.lon)) return o;
-        }catch{}
+        } catch {}
         return { ...DEFAULT_HOME };
       }
       function saveHome(lat, lon){
         localStorage.setItem(HQ_KEY, JSON.stringify({lat, lon}));
-      }
-
-      function milesToLatDeg(mi){ return mi / 69.0; }
-      function milesToLonDeg(mi, lat){ return mi / (69.0 * Math.cos(lat * Math.PI/180)); }
-
-      function haversineMiles(lat1, lon1, lat2, lon2){
-        const R = 3958.8;
-        const toRad = (x) => x * Math.PI / 180;
-        const dLat = toRad(lat2 - lat1);
-        const dLon = toRad(lon2 - lon1);
-        const a =
-          Math.sin(dLat/2)**2 +
-          Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
-        return 2 * R * Math.asin(Math.sqrt(a));
-      }
-
-      const trafficRe = /traffic|signal|sign|street\s*light|streetlight/i;
-      const parkingRe = /park|parking|vehicle|tow|driveway|abandoned|obstruction|illegally\s*park|blocked/i;
-
-      function isTraffic(type){ return trafficRe.test(type || ""); }
-      function isParking(type){ return parkingRe.test(type || ""); }
-
-      function makeCaseId(a){
-        return String(a.CaseNumber365 || a.CaseNumber || a.ObjectID || (a.IncidentAddress||"") + "::" + (a.CreatedDate||""));
-      }
-
-      function normalizeStatus(a){
-        return (a.StateCodeName || a.Status || "").toLowerCase().trim();
-      }
-      function isOpenish(status){
-        return status.includes("active") || status.includes("open") || status.includes("routed") || status.includes("acknowledged");
-      }
-
-      function safeText(s){ return String(s || "").replace(/[<>]/g, ""); }
-      function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
-
-      function whistledownify(caseType, address, status){
-        const openers = [
-          "Dearest reader, it would seem that",
-          "One cannot help but notice that",
-          "Society whispers that",
-          "It has come to this author’s attention that"
-        ];
-        const verbs = [
-          "has once again made an appearance",
-          "has attracted entirely too much attention",
-          "has caused several pearls to be clutched",
-          "has become the talk of the street"
-        ];
-        const closersOpen = [
-          "—and the matter remains, regrettably, unresolved.",
-          "—a scandal still very much alive.",
-          "—one suspects the ton will not let this rest."
-        ];
-        const closersClosed = [
-          "—a drama now mercifully concluded.",
-          "—a chapter closed, at last.",
-          "—society exhales… for now."
-        ];
-
-        const st = (status || "").toLowerCase();
-        const closer = isOpenish(st) ? pick(closersOpen) : pick(closersClosed);
-
-        const type = (caseType || "a curbside affair").toLowerCase();
-        const addr = address ? `near <em>${safeText(address)}</em>` : "in your vicinity";
-
-        return `${pick(openers)} <em>${type}</em> ${pick(verbs)} ${addr} ${closer}`;
-      }
-
-      function whistledownIntro(chaosCount){
-        if (chaosCount === 0) return "It appears the curbside remains delightfully unremarkable today. How rare.";
-        if (chaosCount <= 2) return "A gentle murmur among the hedges—nothing the household cannot endure.";
-        if (chaosCount <= 6) return "Raised eyebrows at the garden party. One suggests keeping a fan close at hand.";
-        if (chaosCount <= 12) return "A scandal begins to bloom. One does hope the neighbors are seated.";
-        return "Society is in shambles. Even the Queen would raise an eyebrow.";
       }
 
       function loadArchive(){
@@ -465,49 +508,149 @@
         localStorage.setItem(SNAP_KEY, JSON.stringify(obj));
       }
 
-      // ======== BETTER SOUND: tiny chimes only (no drone) ========
-      let audioCtx = null;
-      function ensureAudio(){
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        return audioCtx;
+      // ===== HELPERS =====
+      function milesToLatDeg(mi){ return mi / 69.0; }
+      function milesToLonDeg(mi, lat){ return mi / (69.0 * Math.cos(lat * Math.PI/180)); }
+
+      function haversineMiles(lat1, lon1, lat2, lon2){
+        const R = 3958.8;
+        const toRad = (x) => x * Math.PI / 180;
+        const dLat = toRad(lat2 - lat1);
+        const dLon = toRad(lon2 - lon1);
+        const a =
+          Math.sin(dLat/2)**2 +
+          Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+        return 2 * R * Math.asin(Math.sqrt(a));
       }
 
-      // a tasteful little "plucked" chime using WebAudio (triangle + fast decay)
-      function playChime(pattern = [0, 4, 7], baseHz = 392.0){ // G4 base
-        if (!$("soundOn").checked) return;
-        try{
-          const ctx = ensureAudio();
-          const t0 = ctx.currentTime;
+      const trafficRe = /traffic|signal|sign|street\s*light|streetlight/i;
+      const parkingRe = /park|parking|vehicle|tow|driveway|abandoned|obstruction|illegally\s*park|blocked/i;
 
-          pattern.forEach((semitones, i) => {
-            const o = ctx.createOscillator();
-            const g = ctx.createGain();
-            const f = ctx.createBiquadFilter();
+      function isTraffic(type){ return trafficRe.test(type || ""); }
+      function isParking(type){ return parkingRe.test(type || ""); }
 
-            o.type = "triangle";
-            const hz = baseHz * Math.pow(2, semitones/12);
-            o.frequency.value = hz;
-
-            f.type = "lowpass";
-            f.frequency.value = 1800;
-
-            // pluck envelope
-            g.gain.setValueAtTime(0.00001, t0 + i*0.08);
-            g.gain.linearRampToValueAtTime(0.05, t0 + i*0.08 + 0.01);
-            g.gain.exponentialRampToValueAtTime(0.00001, t0 + i*0.08 + 0.22);
-
-            o.connect(f); f.connect(g); g.connect(ctx.destination);
-            o.start(t0 + i*0.08);
-            o.stop(t0 + i*0.08 + 0.26);
-          });
-        }catch{}
+      function makeCaseId(a){
+        return String(a.CaseNumber365 || a.CaseNumber || a.ObjectID || (a.IncidentAddress||"") + "::" + (a.CreatedDate||""));
+      }
+      function normalizeStatus(a){
+        return (a.StateCodeName || a.Status || "").toLowerCase().trim();
+      }
+      function isOpenish(status){
+        return status.includes("active") || status.includes("open") || status.includes("routed") || status.includes("acknowledged");
       }
 
-      // ======== STATE =========
+      function safeText(s){ return String(s || "").replace(/[<>]/g, ""); }
+      function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+
+      // ===== WHISTLEDOWN PROSE =====
+      function whistledownify(caseType, address, status){
+        const openers = [
+          "Dearest reader, it would seem that",
+          "One cannot help but notice that",
+          "Society whispers that",
+          "It has come to this author’s attention that"
+        ];
+        const verbs = [
+          "has once again made an appearance",
+          "has attracted entirely too much attention",
+          "has caused several pearls to be clutched",
+          "has become the talk of the plaza"
+        ];
+        const closersOpen = [
+          "—and the matter remains, regrettably, unresolved.",
+          "—a scandal still very much alive.",
+          "—one suspects the ton will not let this rest."
+        ];
+        const closersClosed = [
+          "—a drama now mercifully concluded.",
+          "—a chapter closed, at last.",
+          "—society exhales… for now."
+        ];
+
+        const st = (status || "").toLowerCase();
+        const closer = isOpenish(st) ? pick(closersOpen) : pick(closersClosed);
+
+        const type = (caseType || "a curbside affair").toLowerCase();
+        const addr = address ? `near <em>${safeText(address)}</em>` : "in your vicinity";
+
+        return `${pick(openers)} <em>${type}</em> ${pick(verbs)} ${addr} ${closer}`;
+      }
+
+      function whistledownIntro(chaosCount){
+        if (chaosCount === 0) return "It appears the plaza remains delightfully unremarkable today. How rare.";
+        if (chaosCount <= 2) return "A gentle murmur among the hedges—nothing the household cannot endure.";
+        if (chaosCount <= 6) return "Raised eyebrows at the garden party. One suggests keeping a fan close at hand.";
+        if (chaosCount <= 12) return "A scandal begins to bloom. One does hope the neighbors are seated.";
+        return "Society is in shambles. Even the Queen would raise an eyebrow.";
+      }
+
+      // ===== UI =====
+      function setChaos(n){
+        $("chaosCount").textContent = String(n);
+        $("chaosLabel").textContent =
+          n === 0 ? "A blessed silence." :
+          n <= 2 ? "A murmur among the hedges." :
+          n <= 6 ? "Raised eyebrows at the garden party." :
+          n <= 12 ? "Whispers become a scandal." :
+          "Society is in shambles.";
+        const pct = Math.min(100, Math.round((n / 18) * 100));
+        $("chaosBar").style.width = pct + "%";
+      }
+
+      function setStamp(){
+        $("stamp").textContent = `Last run: ${regencyStamp(new Date())}`;
+      }
+
+      function setDiag(text){
+        $("diag").textContent = text;
+      }
+
+      function setFeature(text, note){
+        $("featureText").innerHTML = text;
+        $("featureStamp").textContent = `— ${regencyStamp(new Date())}`;
+        $("featureNote").textContent = note || "";
+      }
+
+      function renderTopList(el, items){
+        el.innerHTML = "";
+        if (!items.length){
+          el.innerHTML = `<li class="muted">No entries yet.</li>`;
+          return;
+        }
+        for (const it of items.slice(0, 5)){
+          const li = document.createElement("li");
+          li.textContent = it;
+          el.appendChild(li);
+        }
+      }
+
+      // ===== ARC GIS =====
       let HOME = loadHome();
       let radiusMiles = Number($("radius").value || 1.0);
 
-      // ======== MAP =========
+      function buildArcgisUrl(){
+        const latPad = milesToLatDeg(radiusMiles) * 1.25;
+        const lonPad = milesToLonDeg(radiusMiles, HOME.lat) * 1.25;
+
+        const minLat = (HOME.lat - latPad).toFixed(6);
+        const maxLat = (HOME.lat + latPad).toFixed(6);
+        const minLon = (HOME.lon - lonPad).toFixed(6);
+        const maxLon = (HOME.lon + lonPad).toFixed(6);
+
+        const where =
+          `Latitude >= ${minLat} AND Latitude <= ${maxLat} AND Longitude >= ${minLon} AND Longitude <= ${maxLon}`;
+
+        const params = new URLSearchParams({
+          where,
+          outFields: "CaseType,StateCodeName,Status,IncidentAddress,Latitude,Longitude,CaseNumber365,CaseNumber,CreatedDate,ClosedDate",
+          resultRecordCount: "2000",
+          f: "json"
+        });
+
+        return "https://mycity2.houstontx.gov/pubgis01/rest/services/311/Houston311_RecentServiceRequests/FeatureServer/3/query?" + params.toString();
+      }
+
+      // ===== MAP =====
       const map = L.map("map").setView([HOME.lat, HOME.lon], 16);
       setTimeout(() => map.invalidateSize(), 60);
 
@@ -533,8 +676,8 @@
         HOME = { lat: ll.lat, lon: ll.lng };
         saveHome(HOME.lat, HOME.lon);
         radiusCircle.setLatLng([HOME.lat, HOME.lon]);
-        playChime([0, 3, 7], 349.2); // F-ish "relocation"
-        await refresh(false);
+        $("dateline").textContent = regencyDateline(); // refresh headline date
+        await refresh();
       });
 
       let markers = new Map();
@@ -573,7 +716,7 @@
         const caseNum = safeText(a.CaseNumber365 || a.CaseNumber || "—");
 
         m.bindPopup(`
-          <div style="font-family:Georgia,serif; line-height:1.45;">
+          <div style="font-family:'Cormorant Garamond',serif; line-height:1.45; font-size:15px;">
             <div style="font-size:16px; font-weight:800;">${type}</div>
             <div style="color:#6f6a64;">${address}</div>
             <div style="margin-top:6px;">Status: <b>${status}</b></div>
@@ -583,7 +726,7 @@
                 Open Houston 311 case status
               </a>
             </div>
-            <div class="tinyNote" style="margin-top:6px;">
+            <div style="margin-top:6px; color:#6f6a64; font-style:italic; font-size:12px;">
               The portal does not reliably accept pre-filled links; copy/paste the case # above.
             </div>
           </div>
@@ -592,73 +735,21 @@
         markers.set(id, m);
       }
 
-      function setChaos(n){
-        $("chaosCount").textContent = String(n);
-        $("chaosLabel").textContent =
-          n === 0 ? "A blessed silence." :
-          n <= 2 ? "A murmur among the hedges." :
-          n <= 6 ? "Raised eyebrows at the garden party." :
-          n <= 12 ? "Whispers become a scandal." :
-          "Society is in shambles.";
-        const pct = Math.min(100, Math.round((n / 18) * 100));
-        $("chaosBar").style.width = pct + "%";
+      // ===== DIGEST + ARCHIVE =====
+      function todayLocalYYYYMMDD(){
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth()+1).padStart(2,"0");
+        const day = String(d.getDate()).padStart(2,"0");
+        return `${y}-${m}-${day}`;
       }
 
-      function setStamp(){
-        $("stamp").textContent = "Last run: " + new Date().toLocaleString();
-      }
-      function setDiag(text){
-        $("diag").textContent = text;
-      }
-      function setFeature(text, note){
-        $("featureText").innerHTML = text;
-        $("featureStamp").textContent = "— " + new Date().toLocaleTimeString();
-        $("featureNote").textContent = note || "";
-      }
-
-      function renderTopList(el, items){
-        el.innerHTML = "";
-        if (!items.length){
-          el.innerHTML = `<li class="muted">No entries yet.</li>`;
-          return;
-        }
-        for (const it of items.slice(0, 5)){
-          const li = document.createElement("li");
-          li.textContent = it;
-          el.appendChild(li);
-        }
-      }
-
-      function buildArcgisUrl(){
-        const latPad = milesToLatDeg(radiusMiles) * 1.25;
-        const lonPad = milesToLonDeg(radiusMiles, HOME.lat) * 1.25;
-
-        const minLat = (HOME.lat - latPad).toFixed(6);
-        const maxLat = (HOME.lat + latPad).toFixed(6);
-        const minLon = (HOME.lon - lonPad).toFixed(6);
-        const maxLon = (HOME.lon + lonPad).toFixed(6);
-
-        const where =
-          `Latitude >= ${minLat} AND Latitude <= ${maxLat} AND Longitude >= ${minLon} AND Longitude <= ${maxLon}`;
-
-        const params = new URLSearchParams({
-          where,
-          outFields: "CaseType,StateCodeName,Status,IncidentAddress,Latitude,Longitude,CaseNumber365,CaseNumber,CreatedDate,ClosedDate",
-          resultRecordCount: "2000",
-          f: "json"
-        });
-
-        return "https://mycity2.houstontx.gov/pubgis01/rest/services/311/Houston311_RecentServiceRequests/FeatureServer/3/query?" + params.toString();
-      }
-
-      // refresh(triggerChime = true) lets us chime on button click but not on every slider tweak
-      async function refresh(triggerChime = true){
+      async function refresh(){
         $("radiusLabel").textContent = radiusMiles.toFixed(2);
+        $("radiusMini").textContent = `Radius: ${radiusMiles.toFixed(2)} mi`;
         radiusCircle.setRadius(radiusMiles * 1609.34);
         setStamp();
         setDiag("Gathering whispers…");
-
-        if (triggerChime) playChime([0, 4, 7], 392.0); // pleasant triad on refresh
 
         try{
           clearPins();
@@ -698,10 +789,9 @@
           }).sort((x,y) => x.dist - y.dist);
 
           for (const c of cases) addSirenMarker(c.raw);
-
           setChaos(cases.length);
 
-          // Social register
+          // Social Register
           const addrCount = new Map();
           const typeCount = new Map();
           for (const c of cases){
@@ -733,8 +823,6 @@
           const intro = whistledownIntro(cases.length);
           const paragraphs = [intro];
 
-          let newCount = 0;
-
           if (cases.length === 0){
             paragraphs.push("Should any carriage misbehave, this author shall return at once.");
           } else {
@@ -744,7 +832,7 @@
 
             for (const c of cases){
               todaySnap[c.id] = c.status;
-              if (!prevSnap[c.id]) { newOnes.push(c); newCount++; }
+              if (!prevSnap[c.id]) newOnes.push(c);
               else if (prevSnap[c.id] !== c.status) changed.push({ ...c, before: prevSnap[c.id] });
               if (isOpenish(c.status)) openNow.push(c);
             }
@@ -788,13 +876,13 @@
           const textForArchive = [];
 
           for (const block of paragraphs){
-            if (block.includes("\n") ){
+            if (block.includes("\n")){
               const pre = document.createElement("pre");
               pre.style.margin = "0 0 10px";
               pre.style.whiteSpace = "pre-wrap";
-              pre.style.fontFamily = "Georgia, serif";
-              pre.style.fontSize = "14px";
-              pre.style.lineHeight = "1.6";
+              pre.style.fontFamily = "'Cormorant Garamond', serif";
+              pre.style.fontSize = "16px";
+              pre.style.lineHeight = "1.7";
               pre.textContent = block;
               digestEl.appendChild(pre);
               textForArchive.push(block);
@@ -806,7 +894,7 @@
             }
           }
 
-          // archive once per day
+          // Save archive once per day
           const arch = loadArchive();
           if (!arch[today]){
             arch[today] = { createdAt: Date.now(), text: textForArchive.join("\n\n") };
@@ -814,14 +902,11 @@
           }
           renderArchive();
 
-          // save snapshot
+          // Save snapshot
           saveSnap(todaySnap);
           localStorage.setItem(SNAP_DATE_KEY, today);
 
           setDiag(`ArcGIS returned ${feats.length} in bbox; showing ${cases.length} after filters.`);
-
-          // chime if new cases appeared
-          if (newCount > 0) playChime([0, 7, 12], 440.0);
 
         } catch (err){
           console.error(err);
@@ -834,25 +919,22 @@
       }
 
       // ===== EVENTS =====
-      $("refreshBtn").addEventListener("click", () => refresh(true));
-      $("parkingOnly").addEventListener("change", () => refresh(false));
-      $("excludeTraffic").addEventListener("change", () => refresh(false));
+      $("refreshBtn").addEventListener("click", refresh);
+      $("parkingOnly").addEventListener("change", refresh);
+      $("excludeTraffic").addEventListener("change", refresh);
 
       $("radius").addEventListener("input", (e) => {
         radiusMiles = Number(e.target.value);
         $("radiusLabel").textContent = radiusMiles.toFixed(2);
-        refresh(false);
+        $("radiusMini").textContent = `Radius: ${radiusMiles.toFixed(2)} mi`;
+        refresh();
       });
 
-      $("soundOn").addEventListener("change", () => {
-        // no continuous sound; just enables chimes
-        if ($("soundOn").checked) playChime([0, 4, 7], 392.0);
-      });
-
-      // init
+      // ===== INIT =====
       renderArchive();
       $("radiusLabel").textContent = radiusMiles.toFixed(2);
-      refresh(false);
+      $("radiusMini").textContent = `Radius: ${radiusMiles.toFixed(2)} mi`;
+      refresh();
     });
   </script>
 </body>
