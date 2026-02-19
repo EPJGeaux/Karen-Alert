@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Houston Karen HQ Radar</title>
+  <title>Karen Parking Radar</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
   <style>
@@ -19,13 +19,13 @@
       border-radius: 14px;
       box-shadow: 0 6px 18px rgba(0,0,0,0.25);
       font-size: 14px;
-      line-height: 1.4;
-      width: 280px;
+      line-height: 1.35;
+      width: 300px;
     }
     .row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
     .row input[type="text"] { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 10px; }
-    .row button { padding: 8px 10px; border: 0; border-radius: 10px; cursor: pointer; }
-    .muted { color: #666; font-size: 12px; }
+    .row button, .row select { padding: 8px 10px; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; background: #fff; }
+    .muted { color: #666; font-size: 12px; margin-top: 6px; }
     label { display: block; cursor: pointer; margin-top: 6px; }
     .badge { display:inline-block; padding: 2px 8px; border-radius: 999px; background:#f2f2f2; font-size: 12px; margin-left: 6px; }
     .footer {
@@ -44,16 +44,24 @@
 
 <body>
   <div class="panel">
-    <div><strong>Active Karen Radar</strong> <span class="badge" id="countBadge">0</span></div>
-    <div class="muted">Drag “Karen HQ” onto your exact house roof once. It saves.</div>
+    <div><strong>Karen Radar</strong> <span class="badge" id="countBadge">0</span></div>
+    <div class="muted">Drag “Karen HQ” onto the exact roof once. It saves.</div>
+
+    <div class="row">
+      <select id="source">
+        <option value="arcgis">Houston ArcGIS (Recent)</option>
+        <option value="scf">SeeClickFix (Issues API)</option>
+      </select>
+      <button id="refreshBtn">Refresh</button>
+    </div>
 
     <div class="row">
       <button id="recenterBtn">Recenter</button>
       <button id="clearBtn">Clear pins</button>
     </div>
 
-    <div class="row" title="Paste CaseNumber365 or CaseNumber from the case page (not the GUID).">
-      <input id="caseSearch" type="text" placeholder="Search Case # (e.g. 2300... or 1253...)">
+    <div class="row" title="Search varies by source: ArcGIS uses CaseNumber/Address, SeeClickFix uses issue id/summary/address.">
+      <input id="search" type="text" placeholder="Search case # / issue id / keyword">
       <button id="findBtn">Find</button>
     </div>
 
@@ -62,36 +70,44 @@
       <input id="radius" type="range" min="0.25" max="2.0" step="0.25" value="1.0" />
     </label>
 
-    <label><input type="checkbox" id="showParking" checked> 🚗 Parking-ish</label>
-    <label><input type="checkbox" id="showTrash" checked> 🗑 Trash-ish</label>
-    <label><input type="checkbox" id="showNoise" checked> 🔊 Noise-ish</label>
-    <label><input type="checkbox" id="showOther" checked> 🌪 Other chaos</label>
-
     <label class="muted" style="margin-top:10px;">
       <input type="checkbox" id="excludeTraffic" checked>
-      Exclude traffic spam (signals/signs)
+      Hide traffic spam (signals/signs/etc)
     </label>
 
-    <div class="muted" id="statusLine" style="margin-top:10px;">Loading…</div>
+    <div class="muted" id="statusLine">Loading…</div>
   </div>
 
-  <div class="footer">Houston Karen HQ Radar</div>
+  <div class="footer">Karen Parking Radar</div>
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // --- STARTING HQ (your coords) ---
+    // === Your HQ coords ===
     const DEFAULT_HOME = { lat: 29.828103, lon: -95.426829 };
 
-    // --- HOUSTON 311 RECENT FEED (TABLE ID = 3) ---
-    // Active cases only; keep fields we need.
-    const apiURL =
+    // === Sources ===
+    // ArcGIS: table id 3; Active only
+    const ARC_URL =
       "https://mycity2.houstontx.gov/pubgis01/rest/services/311/Houston311_RecentServiceRequests/FeatureServer/3/query" +
       "?where=StateCodeName%3D'Active'" +
-      "&outFields=CaseType,Status,Latitude,Longitude,IncidentAddress,CaseNumber365,CaseNumber,CreatedDate" +
+      "&outFields=CaseType,Status,Latitude,Longitude,IncidentAddress,CaseNumber365,CaseNumber,CreatedDate,StateCodeName" +
       "&resultRecordCount=2000&f=json";
 
-    // ----- Utilities -----
+    // SeeClickFix: public issues list; we pass lat/lng + status + sort=distance
+    // Docs: GET https://seeclickfix.com/api/v2/issues ; geography supports lat/lng; status supports open/acknowledged/closed etc. :contentReference[oaicite:1]{index=1}
+    function scfUrl(lat, lon) {
+      const u = new URL("https://seeclickfix.com/api/v2/issues");
+      u.searchParams.set("lat", lat);
+      u.searchParams.set("lng", lon);
+      u.searchParams.set("status", "open,acknowledged"); // “active-ish”
+      u.searchParams.set("sort", "distance");
+      u.searchParams.set("sort_direction", "ASC");
+      u.searchParams.set("per_page", "100"); // max 100
+      return u.toString();
+    }
+
+    // === Helpers ===
     const $ = (id) => document.getElementById(id);
 
     function loadHome() {
@@ -103,7 +119,6 @@
       } catch {}
       return { ...DEFAULT_HOME };
     }
-
     function saveHome(lat, lon) {
       localStorage.setItem("karen_home", JSON.stringify({ lat, lon }));
     }
@@ -113,43 +128,38 @@
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
       const a =
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.sin(dLat/2) ** 2 +
         Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
-        Math.sin(dLon/2) * Math.sin(dLon/2);
+        Math.sin(dLon/2) ** 2;
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
     function looksLikeHoustonLatLon(lat, lon) {
-      return lat > 29 && lat < 31 && lon < -94 && lon > -96;
+      return Number.isFinite(lat) && Number.isFinite(lon) && lat > 29 && lat < 31 && lon < -94 && lon > -96;
     }
 
-    function classify(caseType) {
-      const t = (caseType || "").toLowerCase();
-      const parking = t.includes("parking") || t.includes("vehicle") || t.includes("parked") || t.includes("tow");
-      const trash   = t.includes("trash") || t.includes("garbage") || t.includes("debris") || t.includes("junk") || t.includes("litter");
-      const noise   = t.includes("noise") || t.includes("loud") || t.includes("sound");
-      if (parking) return "parking";
-      if (trash) return "trash";
-      if (noise) return "noise";
-      return "other";
+    function isTrafficSpam(text) {
+      const t = (text || "").toLowerCase();
+      return (
+        t.includes("traffic signal") ||
+        t.includes("traffic sign") ||
+        t.includes("traffic signals") ||
+        t.includes("traffic signs") ||
+        t.includes("signal") && t.includes("traffic") ||
+        t.includes("sign") && t.includes("traffic")
+      );
     }
 
-    function isTrafficSpam(caseType) {
-      const t = (caseType || "").toLowerCase();
-      return t.includes("traffic signal") || t.includes("traffic sign") || t.includes("traffic");
-    }
-
-    // ----- Map -----
+    // === Map init ===
     let HOME = loadHome();
     let radiusMiles = 1.0;
 
     const map = L.map("map").setView([HOME.lat, HOME.lon], 16);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
-    // HQ marker (draggable) + radius circle
     const hqMarker = L.marker([HOME.lat, HOME.lon], { draggable: true })
       .addTo(map)
-      .bindPopup("🏠 Karen HQ (drag me onto the roof once)")
+      .bindPopup("🏠 Karen HQ (drag me onto the exact roof)")
       .openPopup();
 
     const radiusCircle = L.circle([HOME.lat, HOME.lon], {
@@ -163,13 +173,13 @@
       saveHome(HOME.lat, HOME.lon);
       radiusCircle.setLatLng([HOME.lat, HOME.lon]);
       map.panTo([HOME.lat, HOME.lon]);
-      refresh(); // rerun filters immediately
+      refresh();
     });
 
-    // ----- Rendering state -----
-    let markers = new Map();         // id -> marker
-    let knownIds = new Set();        // for new-case animation
-    let latestData = [];             // cached attributes
+    // === Rendering state ===
+    let markers = new Map();   // id -> marker
+    let latest = [];           // normalized records (common shape)
+    let known = new Set();     // for “new” animation
 
     function clearPins() {
       for (const m of markers.values()) map.removeLayer(m);
@@ -177,74 +187,129 @@
       $("countBadge").textContent = "0";
     }
 
-    function passesToggles(cat) {
-      if (cat === "parking") return $("showParking").checked;
-      if (cat === "trash")   return $("showTrash").checked;
-      if (cat === "noise")   return $("showNoise").checked;
-      return $("showOther").checked;
+    function popIn(marker) {
+      marker.setStyle({ opacity: 0, fillOpacity: 0 });
+      setTimeout(() => marker.setStyle({ opacity: 1, fillOpacity: 0.7 }), 60);
     }
 
-    function makeId(a) {
-      return a.CaseNumber365 || a.CaseNumber || a.ObjectID || (a.IncidentAddress + "::" + a.CreatedDate);
-    }
-
-    function addOrUpdatePin(attrs) {
-      const id = makeId(attrs);
-      const lat = Number(attrs.Latitude);
-      const lon = Number(attrs.Longitude);
-
-      if (!looksLikeHoustonLatLon(lat, lon)) return;
+    function addPin(rec) {
+      const { id, lat, lon, title, status, address, rawType } = rec;
+      if (markers.has(id)) return;
 
       const dist = milesBetween(HOME.lat, HOME.lon, lat, lon);
       if (dist > radiusMiles) return;
 
-      const cat = classify(attrs.CaseType);
-      if (!passesToggles(cat)) return;
+      if ($("excludeTraffic").checked && isTrafficSpam(rawType || title)) return;
 
-      if ($("excludeTraffic").checked && isTrafficSpam(attrs.CaseType)) return;
-
-      if (markers.has(id)) return;
-
-      const popup =
-        `<b>${attrs.CaseType || "Unknown"}</b><br>` +
-        `Status: ${attrs.Status || "Unknown"}<br>` +
-        `Distance: ${dist.toFixed(2)} mi<br>` +
-        `${attrs.IncidentAddress || ""}<br>` +
-        `<span class="muted">CaseNumber365: ${attrs.CaseNumber365 || ""} | CaseNumber: ${attrs.CaseNumber || ""}</span>`;
-
-      const marker = L.circleMarker([lat, lon], { radius: 7 }).addTo(map).bindPopup(popup);
-
-      // New-case animation (subtle fade-in)
-      marker.setStyle({ opacity: 0, fillOpacity: 0 });
-      setTimeout(() => marker.setStyle({ opacity: 1, fillOpacity: 0.7 }), 60);
+      const marker = L.circleMarker([lat, lon], { radius: 7 })
+        .addTo(map)
+        .bindPopup(
+          `<b>${title || "Unknown"}</b><br>` +
+          `Status: ${status || "Unknown"}<br>` +
+          `Distance: ${dist.toFixed(2)} mi<br>` +
+          `${address || ""}<br>` +
+          `<span class="muted">id: ${id}</span>`
+        );
 
       markers.set(id, marker);
-      if (!knownIds.has(id)) knownIds.add(id);
+
+      if (!known.has(id)) {
+        known.add(id);
+        popIn(marker);
+      }
     }
 
     function render() {
       clearPins();
-      for (const attrs of latestData) addOrUpdatePin(attrs);
+      latest.forEach(addPin);
       $("countBadge").textContent = String(markers.size);
+      $("statusLine").textContent = `Showing ${markers.size} within ${radiusMiles.toFixed(2)} mi.`;
+    }
+
+    // === Normalize data from each source into common records ===
+    function normalizeArcGIS(data) {
+      const feats = data.features || [];
+      return feats.map(f => f.attributes || {}).map(a => {
+        const lat = Number(a.Latitude);
+        const lon = Number(a.Longitude);
+        return {
+          id: String(a.CaseNumber365 || a.CaseNumber || a.ObjectID || Math.random()),
+          lat, lon,
+          title: a.CaseType || "Houston 311",
+          status: a.StateCodeName || a.Status || "Active",
+          address: a.IncidentAddress || "",
+          rawType: a.CaseType || ""
+        };
+      }).filter(r => looksLikeHoustonLatLon(r.lat, r.lon));
+    }
+
+    function normalizeSCF(data) {
+      const issues = data.issues || data.result || []; // docs show "issues" array :contentReference[oaicite:2]{index=2}
+      return issues.map(i => {
+        const lat = Number(i.lat);
+        const lon = Number(i.lng);
+        return {
+          id: String(i.id),
+          lat, lon,
+          title: i.summary || "SeeClickFix Issue",
+          status: i.status || "",
+          address: i.address || "",
+          rawType: i.summary || ""
+        };
+      }).filter(r => looksLikeHoustonLatLon(r.lat, r.lon));
     }
 
     async function refresh() {
       $("statusLine").textContent = "Refreshing…";
       try {
-        const res = await fetch(apiURL);
-        const data = await res.json();
-        const features = data.features || [];
-        latestData = features.map(f => f.attributes || {});
-        $("statusLine").textContent = `Loaded ${features.length} active cases. Showing ${markers.size}.`;
+        const source = $("source").value;
+        let res, data;
+
+        if (source === "arcgis") {
+          res = await fetch(ARC_URL);
+          data = await res.json();
+          latest = normalizeArcGIS(data);
+        } else {
+          const url = scfUrl(HOME.lat, HOME.lon);
+          res = await fetch(url);
+          data = await res.json();
+          latest = normalizeSCF(data);
+        }
+
         render();
-        $("statusLine").textContent = `Loaded ${features.length} active cases. Showing ${markers.size}.`;
       } catch (e) {
         console.error(e);
         $("statusLine").textContent = "API error (check Console).";
       }
     }
 
-    // ----- UI wiring -----
+    function find() {
+      const q = $("search").value.trim().toLowerCase();
+      if (!q) return;
+
+      const hit = latest.find(r =>
+        String(r.id).toLowerCase().includes(q) ||
+        String(r.title).toLowerCase().includes(q) ||
+        String(r.address).toLowerCase().includes(q)
+      );
+
+      if (!hit) {
+        alert("Not found in the CURRENT selected source. Try switching source and refreshing.");
+        return;
+      }
+
+      map.setView([hit.lat, hit.lon], 17);
+      const m = markers.get(hit.id);
+      if (m) m.openPopup();
+      else {
+        // force-spotlight even if filtered out by radius (should be rare)
+        const spot = L.circleMarker([hit.lat, hit.lon], { radius: 12 }).addTo(map)
+          .bindPopup(`<b>🎯 FOUND</b><br>${hit.title}<br>${hit.address}`).openPopup();
+        setTimeout(() => map.removeLayer(spot), 8000);
+      }
+    }
+
+    // === UI wiring ===
     $("radius").addEventListener("input", (e) => {
       radiusMiles = Number(e.target.value);
       $("radiusLabel").textContent = radiusMiles.toFixed(2);
@@ -252,9 +317,9 @@
       render();
     });
 
-    ["showParking","showTrash","showNoise","showOther","excludeTraffic"].forEach(id => {
-      $(id).addEventListener("change", render);
-    });
+    $("refreshBtn").addEventListener("click", refresh);
+    $("source").addEventListener("change", refresh);
+    $("excludeTraffic").addEventListener("change", render);
 
     $("recenterBtn").addEventListener("click", () => {
       map.setView([HOME.lat, HOME.lon], 16);
@@ -263,52 +328,17 @@
     });
 
     $("clearBtn").addEventListener("click", () => {
-      markers.forEach(m => map.removeLayer(m));
-      markers.clear();
-      $("countBadge").textContent = "0";
-      $("statusLine").textContent = "Cleared pins. (Next refresh brings them back.)";
+      clearPins();
+      $("statusLine").textContent = "Cleared pins. Hit Refresh to reload.";
     });
 
-    function findCase() {
-      const q = $("caseSearch").value.trim();
-      if (!q) return;
+    $("findBtn").addEventListener("click", find);
+    $("search").addEventListener("keydown", (e) => { if (e.key === "Enter") find(); });
 
-      // Search in cached data by CaseNumber365 / CaseNumber
-      const hit = latestData.find(a =>
-        String(a.CaseNumber365 || "").includes(q) ||
-        String(a.CaseNumber || "").includes(q)
-      );
-
-      if (!hit) {
-        alert("Not found in the public 'recent' feed. If the case is older than ~2 weeks or lacks coordinates, it won't appear here.");
-        return;
-      }
-
-      const lat = Number(hit.Latitude), lon = Number(hit.Longitude);
-      if (!looksLikeHoustonLatLon(lat, lon)) {
-        alert("Found it, but it has no mappable Lat/Lon in the feed.");
-        return;
-      }
-
-      // Ensure it's rendered regardless of toggles/radius (spotlight mode)
-      const spotlight = L.circleMarker([lat, lon], { radius: 12 }).addTo(map)
-        .bindPopup(`<b>🎯 FOUND CASE</b><br>${hit.CaseType}<br>${hit.IncidentAddress}`).openPopup();
-
-      map.setView([lat, lon], 17);
-      setTimeout(() => map.removeLayer(spotlight), 8000);
-    }
-
-    $("findBtn").addEventListener("click", findCase);
-    $("caseSearch").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") findCase();
-    });
-
-    // init UI
+    // init
     $("radiusLabel").textContent = radiusMiles.toFixed(2);
-
-    // first load + polling
     refresh();
-    setInterval(refresh, 30000);
+    setInterval(refresh, 30000); // auto-refresh + “new complaint pop-in”
   </script>
 </body>
 </html>
